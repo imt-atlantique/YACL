@@ -39,13 +39,25 @@
 #define CBOR_FLOAT32 (CBOR_7 | 26)
 #define CBOR_FLOAT64 (CBOR_7 | 27)
 
+#define STATIC_ALLOC_SIZE 9
+#define BUFFER_STATIC_INTERNAL 0
+#define BUFFER_DYNAMIC_INTERNAL 1
+#define BUFFER_EXTERNAL 2
+
 class CBOR
 {
 	protected:
-		uint8_t *buffer_begin, *buffer;
-		size_t max_buf_len;
-		bool ext_buffer_flag;
+		union {
+			uint8_t static_buffer_begin[STATIC_ALLOC_SIZE];
+			uint8_t *buffer_begin;
+		};
+		uint8_t *buffer = static_buffer_begin;
+		size_t max_buf_len = STATIC_ALLOC_SIZE;
+		uint8_t buffer_type = BUFFER_STATIC_INTERNAL;
 
+		uint8_t* get_buffer_begin() {
+			return (buffer_type == BUFFER_STATIC_INTERNAL)?static_buffer_begin:buffer_begin;
+		};
 		bool init_buffer();
 		bool reserve(size_t length);
 
@@ -63,11 +75,11 @@ class CBOR
 
 		static uint8_t compute_type_num_len(size_t num_ele);
 
-		uint8_t decode_abs_num8() const { return decode_abs_num8(buffer_begin); };
-		uint16_t decode_abs_num16() const { return decode_abs_num16(buffer_begin); };
-		uint32_t decode_abs_num32() const { return decode_abs_num32(buffer_begin); };
-		uint64_t decode_abs_num64() const { return decode_abs_num64(buffer_begin); };
-		size_t decode_abs_num() const { return decode_abs_num(buffer_begin); };
+		uint8_t decode_abs_num8() const { return decode_abs_num8(get_buffer_begin()); };
+		uint16_t decode_abs_num16() const { return decode_abs_num16(get_buffer_begin()); };
+		uint32_t decode_abs_num32() const { return decode_abs_num32(get_buffer_begin()); };
+		uint64_t decode_abs_num64() const { return decode_abs_num64(get_buffer_begin()); };
+		size_t decode_abs_num() const { return decode_abs_num(get_buffer_begin()); };
 
 		//Jump to the end of this item
 		size_t jump();
@@ -114,8 +126,8 @@ class CBOR
 
 		~CBOR();
 
-		virtual size_t length() const { return (size_t)(buffer - buffer_begin); }
-		virtual const uint8_t* to_CBOR() { return buffer_begin; }
+		virtual size_t length() const { return (size_t)(buffer - get_buffer_begin()); }
+		virtual const uint8_t* to_CBOR() { return get_buffer_begin(); }
 
 		static bool is_null(const uint8_t* _buffer);
 		static bool is_bool(const uint8_t* _buffer);
@@ -134,28 +146,28 @@ class CBOR
 		static bool is_array(const uint8_t* _buffer);
 		static bool is_pair(const uint8_t* _buffer);
 
-		bool is_null() const {return is_null(buffer_begin); };
-		bool is_bool() const {return is_bool(buffer_begin); };
+		bool is_null() const {return is_null(get_buffer_begin()); };
+		bool is_bool() const {return is_bool(get_buffer_begin()); };
 		//Does not mean that type is a CBOR (u)int*, but rather wether or not
 		//the CBOR number fits in a (u)int* C type.
 		//For example, 200 is: uint8, uint16, uint32, uint64, int16, int32,
 		//int64 but not int8.
-		bool is_uint8() const {return is_uint8(buffer_begin); };
-		bool is_uint16() const {return is_uint16(buffer_begin); };
-		bool is_uint32() const {return is_uint32(buffer_begin); };
-		bool is_uint64() const {return is_uint64(buffer_begin); };
-		bool is_int8() const {return is_int8(buffer_begin); };
-		bool is_int16() const {return is_int16(buffer_begin); };
-		bool is_int32() const {return is_int32(buffer_begin); };
-		bool is_int64() const {return is_int64(buffer_begin); };
+		bool is_uint8() const {return is_uint8(get_buffer_begin()); };
+		bool is_uint16() const {return is_uint16(get_buffer_begin()); };
+		bool is_uint32() const {return is_uint32(get_buffer_begin()); };
+		bool is_uint64() const {return is_uint64(get_buffer_begin()); };
+		bool is_int8() const {return is_int8(get_buffer_begin()); };
+		bool is_int16() const {return is_int16(get_buffer_begin()); };
+		bool is_int32() const {return is_int32(get_buffer_begin()); };
+		bool is_int64() const {return is_int64(get_buffer_begin()); };
 		//Does not mean that type is a CBOR float*, but rather wether or not
 		//the CBOR number fits in a float* C type.
-		bool is_float16() const {return is_float16(buffer_begin); };
-		bool is_float32() const {return is_float32(buffer_begin); };
-		bool is_float64() const {return is_float64(buffer_begin); };
-		bool is_string() const {return is_string(buffer_begin); };
-		bool is_array() const {return is_array(buffer_begin); };
-		bool is_pair() const {return is_pair(buffer_begin); };
+		bool is_float16() const {return is_float16(get_buffer_begin()); };
+		bool is_float32() const {return is_float32(get_buffer_begin()); };
+		bool is_float64() const {return is_float64(get_buffer_begin()); };
+		bool is_string() const {return is_string(get_buffer_begin()); };
+		bool is_array() const {return is_array(get_buffer_begin()); };
+		bool is_pair() const {return is_pair(get_buffer_begin()); };
 
 		operator bool() const;
 		//Operators (u)int* will return 0 in case of failure.

@@ -2,103 +2,90 @@
 
 bool CBOR::init_buffer()
 {
-	buffer = (uint8_t*)malloc(sizeof(uint8_t)*max_buf_len);
-	if (buffer == NULL) {
+	buffer_begin = (uint8_t*)malloc(sizeof(uint8_t)*max_buf_len);
+	if (buffer_begin == NULL) {
 		return false;
-
-		buffer_begin = NULL;
-
-		ext_buffer_flag = false;
 	}
-	buffer_begin = buffer;
 
-	ext_buffer_flag = false;
+	buffer = buffer_begin;
+	buffer_type = BUFFER_DYNAMIC_INTERNAL;
 
 	return true;
 }
 
-CBOR::CBOR() : max_buf_len(1)
+CBOR::CBOR()
 {
-	init_buffer();
 	add();
 }
 
-CBOR::CBOR(bool value) : max_buf_len(1)
+CBOR::CBOR(bool value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(uint8_t value) : max_buf_len(2)
+CBOR::CBOR(uint8_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(uint16_t value) : max_buf_len(3)
+CBOR::CBOR(uint16_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(uint32_t value) : max_buf_len(5)
+CBOR::CBOR(uint32_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(uint64_t value) : max_buf_len(9)
+CBOR::CBOR(uint64_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(int8_t value) : max_buf_len(2)
+CBOR::CBOR(int8_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(int16_t value) : max_buf_len(3)
+CBOR::CBOR(int16_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(int32_t value) : max_buf_len(5)
+CBOR::CBOR(int32_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(int64_t value) : max_buf_len(9)
+CBOR::CBOR(int64_t value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(float value) : max_buf_len(5)
+CBOR::CBOR(float value)
 {
-	init_buffer();
 	add(value);
 }
 
-CBOR::CBOR(double value) : max_buf_len(9)
+CBOR::CBOR(double value)
 {
-	init_buffer();
 	add(value);
 }
 
 CBOR::CBOR(const char* value)
 {
-	max_buf_len = strlen(value) + 1;
+	size_t str_buf_len = strlen(value) + 1;
 
-	init_buffer();
+	if (str_buf_len > STATIC_ALLOC_SIZE) {
+		max_buf_len = str_buf_len;
+		init_buffer();
+	}
 
 	add(value);
 }
 
-CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, bool has_data) : ext_buffer_flag(true)
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, bool has_data)
 {
 	max_buf_len = buffer_len;
 
@@ -109,20 +96,24 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, bool has_data) : ext_buffer_flag
 	else {
 		buffer = _buffer;
 	}
+
+	buffer_type = BUFFER_EXTERNAL;
 }
 
 CBOR::CBOR(const CBOR &obj) {
 	const uint8_t* obj_buffer = obj.to_CBOR();
 
-	max_buf_len = obj.length();
-	init_buffer();
+	if (obj.length() > STATIC_ALLOC_SIZE) {
+		max_buf_len = obj.length();
+		init_buffer();
+	}
 
 	memcpy(buffer, obj_buffer, max_buf_len*sizeof(uint8_t));
 }
 
 CBOR::~CBOR()
 {
-	if(!ext_buffer_flag) {
+	if(buffer_type == BUFFER_DYNAMIC_INTERNAL) {
 		free(buffer_begin);
 	}
 }
@@ -226,7 +217,7 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint64_t val)
 }
 
 bool CBOR::is_neg_num() const {
-	return ((buffer_begin[0]&CBOR_7) == CBOR_NEGINT)?true:false;
+	return ((get_buffer_begin()[0]&CBOR_7) == CBOR_NEGINT)?true:false;
 }
 
 uint8_t CBOR::decode_abs_num8(const uint8_t *_buffer) {
@@ -825,7 +816,7 @@ bool CBOR::is_pair(const uint8_t* _buffer)
 
 CBOR::operator bool() const
 {
-	return (buffer_begin[0] == CBOR_TRUE)?true:false;
+	return (get_buffer_begin()[0] == CBOR_TRUE)?true:false;
 }
 
 CBOR::operator uint8_t() const
@@ -970,8 +961,8 @@ CBOR::operator float() const
 	uint8_t *ret_val_bytes = (uint8_t*)&ret_val;
 
 	if (is_float16()) {
-		uint8_t exp = (buffer_begin[1]>>2)&0x1f;
-		uint16_t mant = (buffer_begin[1]&0x03)<<8 | buffer_begin[2];
+		uint8_t exp = (get_buffer_begin()[1]>>2)&0x1f;
+		uint16_t mant = (get_buffer_begin()[1]&0x03)<<8 | get_buffer_begin()[2];
 
 		//Subnormals
 		if (exp == 0) {
@@ -985,11 +976,11 @@ CBOR::operator float() const
 			ret_val = ldexp(mant + 1024, exp - 25);
 		}
 
-		return (buffer_begin[1]&0x80) ? -ret_val : ret_val;
+		return (get_buffer_begin()[1]&0x80) ? -ret_val : ret_val;
 	}
 
 	if (is_float32()) {
-		uint8_t *buf = &(buffer_begin[4]);
+		uint8_t *buf = &(get_buffer_begin()[4]);
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);
@@ -1015,11 +1006,11 @@ CBOR::operator double() const
 		//On AVR arduino, double is the same as float...
 		//In this case, we convert from 64-bit float to 32-bit float
 		if(sizeof(double) == 4) {
-			int32_t exp = ((buffer_begin[1]&0x7F)<<4)|((buffer_begin[2]&0xF0)>>4);
-			uint32_t mant = ((uint32_t)(buffer_begin[2]&0x0F)<<19) \
-							| ((uint32_t)(buffer_begin[3])<<11) \
-							| ((uint32_t)(buffer_begin[4])<<3) \
-							| ((uint32_t)((buffer_begin[5])&0xE0)>>5);
+			int32_t exp = ((get_buffer_begin()[1]&0x7F)<<4)|((get_buffer_begin()[2]&0xF0)>>4);
+			uint32_t mant = ((uint32_t)(get_buffer_begin()[2]&0x0F)<<19) \
+							| ((uint32_t)(get_buffer_begin()[3])<<11) \
+							| ((uint32_t)(get_buffer_begin()[4])<<3) \
+							| ((uint32_t)((get_buffer_begin()[5])&0xE0)>>5);
 			//Subnormals
 			if (exp == 0) {
 				ret_val = ldexp(mant, -149);
@@ -1040,10 +1031,10 @@ CBOR::operator double() const
 				ret_val = ldexp((float)mant + 8388608.0, (exp-1023) - 23);
 			}
 
-			return (buffer_begin[1]&0x80) ? -ret_val : ret_val;
+			return (get_buffer_begin()[1]&0x80) ? -ret_val : ret_val;
 		}
 
-		uint8_t *buf = &(buffer_begin[8]);
+		uint8_t *buf = get_buffer_begin()+8;
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);
@@ -1069,7 +1060,7 @@ void CBOR::get_string(char* str) const
 {
 	size_t len_str = get_string_len();
 
-	memcpy(str, &buffer_begin[1], len_str*sizeof(uint8_t));
+	memcpy(str, get_buffer_begin()+1, len_str*sizeof(uint8_t));
 	str[len_str] = '\0';
 }
 
@@ -1080,8 +1071,8 @@ void CBOR::get_string(String& str) const
 	str.reserve(len_str);
 
 	str = "";
-	for (size_t i=0 ; i < len_str ; ++i) {
-		str += (char)(buffer_begin[i+1]);
+	for (uint8_t* i=get_buffer_begin()+1 ; i < (get_buffer_begin()+1+len_str) ; ++i) {
+		str += (char)(*i);
 	}
 }
 
