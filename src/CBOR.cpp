@@ -7,7 +7,7 @@ bool CBOR::init_buffer()
 		return false;
 	}
 
-	buffer = buffer_begin;
+	w_ptr = buffer_begin;
 	buffer_type = BUFFER_DYNAMIC_INTERNAL;
 
 	return true;
@@ -85,16 +85,16 @@ CBOR::CBOR(const char* value)
 	add(value);
 }
 
-CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, bool has_data)
+CBOR::CBOR(uint8_t* buffer, size_t buffer_len, bool has_data)
 {
 	max_buf_len = buffer_len;
 
-	buffer_begin = _buffer;
+	buffer_begin = buffer;
 	if (has_data) {
-		buffer = _buffer + buffer_len;
+		w_ptr = buffer + buffer_len;
 	}
 	else {
-		buffer = _buffer;
+		w_ptr = buffer;
 	}
 
 	buffer_type = BUFFER_EXTERNAL;
@@ -108,7 +108,7 @@ CBOR::CBOR(const CBOR &obj) {
 		init_buffer();
 	}
 
-	memcpy(buffer, obj_buffer, max_buf_len*sizeof(uint8_t));
+	memcpy(w_ptr, obj_buffer, max_buf_len*sizeof(uint8_t));
 }
 
 CBOR::~CBOR()
@@ -134,15 +134,15 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint8_t val)
 			return false;
 		}
 
-		*(buffer++) = cbor_type | val;
+		*(w_ptr++) = cbor_type | val;
 	}
 	else {
 		if (!reserve(2)) {
 			return false;
 		}
 
-		*(buffer++) = cbor_type | CBOR_UINT8_FOLLOWS;
-		*(buffer++) = val;
+		*(w_ptr++) = cbor_type | CBOR_UINT8_FOLLOWS;
+		*(w_ptr++) = val;
 	}
 
 	return true;
@@ -158,10 +158,10 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint16_t val)
 			return false;
 		}
 
-		*(buffer++) = cbor_type | CBOR_UINT16_FOLLOWS;
+		*(w_ptr++) = cbor_type | CBOR_UINT16_FOLLOWS;
 
-		*(buffer++) = val>>8;
-		*(buffer++) = val;
+		*(w_ptr++) = val>>8;
+		*(w_ptr++) = val;
 	}
 
 	return true;
@@ -179,13 +179,13 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint32_t val)
 			return false;
 		}
 
-		*(buffer++) = cbor_type | CBOR_UINT32_FOLLOWS;
+		*(w_ptr++) = cbor_type | CBOR_UINT32_FOLLOWS;
 
 		val_bytes = (uint8_t*)&val + 3;
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *val_bytes;
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *val_bytes;
 	}
 
 	return true;
@@ -202,17 +202,17 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint64_t val)
 			return false;
 		}
 
-		*(buffer++) = cbor_type | CBOR_UINT64_FOLLOWS;
+		*(w_ptr++) = cbor_type | CBOR_UINT64_FOLLOWS;
 
 		val_bytes = (uint8_t*)&val + 7;
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *(val_bytes--);
-		*(buffer++) = *val_bytes;
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *(val_bytes--);
+		*(w_ptr++) = *val_bytes;
 	}
 }
 
@@ -220,29 +220,29 @@ bool CBOR::is_neg_num() const {
 	return ((get_buffer_begin()[0]&CBOR_7) == CBOR_NEGINT)?true:false;
 }
 
-uint8_t CBOR::decode_abs_num8(const uint8_t *_buffer) {
-	if ((_buffer[0]&0x1F) <= 23) {
-		return _buffer[0]&0x1F;
+uint8_t CBOR::decode_abs_num8(const uint8_t *buffer) {
+	if ((buffer[0]&0x1F) <= 23) {
+		return buffer[0]&0x1F;
 	}
 	else {
-		return _buffer[1];
+		return buffer[1];
 	}
 }
 
-uint16_t CBOR::decode_abs_num16(const uint8_t *_buffer) {
+uint16_t CBOR::decode_abs_num16(const uint8_t *buffer) {
 	uint16_t ret_val;
 	uint8_t* ret_val_bytes = (uint8_t*)&ret_val;
 
-	*(ret_val_bytes++) = _buffer[2];
-	*ret_val_bytes = _buffer[1];
+	*(ret_val_bytes++) = buffer[2];
+	*ret_val_bytes = buffer[1];
 
 	return ret_val;
 }
 
-uint32_t CBOR::decode_abs_num32(const uint8_t *_buffer) {
+uint32_t CBOR::decode_abs_num32(const uint8_t *buffer) {
 	uint32_t ret_val;
 	uint8_t* ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t* buf = &(_buffer[4]);
+	uint8_t* buf = &(buffer[4]);
 
 	*(ret_val_bytes++) = *(buf--);
 	*(ret_val_bytes++) = *(buf--);
@@ -252,10 +252,10 @@ uint32_t CBOR::decode_abs_num32(const uint8_t *_buffer) {
 	return ret_val;
 }
 
-uint64_t CBOR::decode_abs_num64(const uint8_t *_buffer) {
+uint64_t CBOR::decode_abs_num64(const uint8_t *buffer) {
 	uint64_t ret_val;
 	uint8_t* ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t* buf = &(_buffer[8]);
+	uint8_t* buf = &(buffer[8]);
 
 	*(ret_val_bytes++) = *(buf--);
 	*(ret_val_bytes++) = *(buf--);
@@ -269,23 +269,23 @@ uint64_t CBOR::decode_abs_num64(const uint8_t *_buffer) {
 	return ret_val;
 }
 
-size_t CBOR::decode_abs_num(const uint8_t *_buffer) {
-	uint8_t type = _buffer[0]&0x1F;
+size_t CBOR::decode_abs_num(const uint8_t *buffer) {
+	uint8_t type = buffer[0]&0x1F;
 
 	if (type <= 24) {
-		return decode_abs_num8(_buffer);
+		return decode_abs_num8(buffer);
 	}
 
 	if (type == CBOR_UINT16_FOLLOWS) {
-		return decode_abs_num16(_buffer);
+		return decode_abs_num16(buffer);
 	}
 
 	if (type == CBOR_UINT32_FOLLOWS) {
-		return decode_abs_num32(_buffer);
+		return decode_abs_num32(buffer);
 	}
 
 	if (type == CBOR_UINT64_FOLLOWS) {
-		return decode_abs_num64(_buffer);
+		return decode_abs_num64(buffer);
 	}
 }
 
@@ -307,187 +307,187 @@ uint8_t CBOR::compute_type_num_len(size_t num_ele) {
 }
 
 
-size_t CBOR::jump()
+size_t CBOR::element_size(uint8_t *ptr)
 {
-	uint8_t *type = buffer;
+	uint8_t *type = ptr;
 
 	//Integer
 	if ((*type <= 23) \
 			|| (*type >= 0x20 && *type <= 0x37)) {
-		++buffer;
+		++ptr;
 	}
 	else if (*type == CBOR_UINT8_FOLLOWS \
 			|| (*type == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS))) {
-		buffer += 2;
+		ptr += 2;
 	}
 	else if (*type == CBOR_UINT16_FOLLOWS \
 			|| (*type == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS))) {
-		buffer += 3;
+		ptr += 3;
 	}
 	else if (*type == CBOR_UINT32_FOLLOWS \
 			|| (*type == (CBOR_NEGINT|CBOR_UINT32_FOLLOWS))) {
-		buffer += 5;
+		ptr += 5;
 	}
 	else if (*type == CBOR_UINT64_FOLLOWS \
 			|| (*type == (CBOR_NEGINT|CBOR_UINT64_FOLLOWS))) {
-		buffer += 9;
+		ptr += 9;
 	}
 
 	//Byte / UTF-8 Strings
 	else if (*type >= 0x40 && *type <= 0x57 \
 			|| *type >= 0x60 && *type <= 0x77 ) {
-		buffer += decode_abs_num8(buffer) + 1;
+		ptr += decode_abs_num8(ptr) + 1;
 	}
 	else if (*type == 0x58 || *type == 0x78) {
-		buffer += decode_abs_num8(buffer) + 2;
+		ptr += decode_abs_num8(ptr) + 2;
 	}
 	else if (*type == 0x59 || *type == 0x79) {
-		buffer += decode_abs_num16(buffer) + 3;
+		ptr += decode_abs_num16(ptr) + 3;
 	}
 	else if (*type == 0x5A || *type == 0x7A) {
-		buffer += decode_abs_num32(buffer) + 5;
+		ptr += decode_abs_num32(ptr) + 5;
 	}
 	else if (*type == 0x5B || *type == 0x7B) {
-		buffer += decode_abs_num64(buffer) + 9;
+		ptr += decode_abs_num64(ptr) + 9;
 	}
 	else if (*type == 0x5F || *type == 0x7F) {
 		//Look for break character
-		while (*(++buffer) != CBOR_BREAK) ;
+		while (*(++ptr) != CBOR_BREAK) ;
 	}
 
 	//Array
 	else if (*type >= 0x80 && *type <= 0x97) {
-		uint8_t num_ele = decode_abs_num8(buffer);
-		++buffer;
+		uint8_t num_ele = decode_abs_num8(ptr);
+		++ptr;
 
 		//Jump every element of the table
 		for (uint8_t i=0 ; i < num_ele ; ++i) {
-			jump();
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0x98) {
-		uint8_t num_ele = decode_abs_num8(buffer);
-		buffer += 2;
+		uint8_t num_ele = decode_abs_num8(ptr);
+		ptr += 2;
 
 		//Jump every element of the table
 		for (uint8_t i=0 ; i < num_ele ; ++i) {
-			jump();
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0x99) {
-		uint16_t num_ele = decode_abs_num16(buffer);
-		buffer += 3;
+		uint16_t num_ele = decode_abs_num16(ptr);
+		ptr += 3;
 
 		//Jump every element of the table
 		for (uint16_t i=0 ; i < num_ele ; ++i) {
-			jump();
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0x9A) {
-		uint32_t num_ele = decode_abs_num32(buffer);
-		buffer += 5;
+		uint32_t num_ele = decode_abs_num32(ptr);
+		ptr += 5;
 
 		//Jump every element of the table
 		for (uint32_t i=0 ; i < num_ele ; ++i) {
-			jump();
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0x9B) {
-		uint64_t num_ele = decode_abs_num64(buffer);
-		buffer += 9;
+		uint64_t num_ele = decode_abs_num64(ptr);
+		ptr += 9;
 
 		//Jump every element of the table
 		for (uint64_t i=0 ; i < num_ele ; ++i) {
-			jump();
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0x9F) {
 		//Jump every element of the table
-		while (*buffer != CBOR_BREAK) {
-			jump();
+		while (*ptr != CBOR_BREAK) {
+			ptr += element_size(ptr);
 		}
 	}
 
 	//Map
 	else if (*type >= 0xA0 && *type <= 0xB7) {
-		uint8_t num_ele = decode_abs_num8(buffer);
-		++buffer;
+		uint8_t num_ele = decode_abs_num8(ptr);
+		++ptr;
 
 		//Jump every element of the map
 		for (uint8_t i=0 ; i < num_ele ; ++i) {
-			jump();
-			jump();
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0xB8) {
-		uint8_t num_ele = decode_abs_num8(buffer);
-		buffer += 2;
+		uint8_t num_ele = decode_abs_num8(ptr);
+		ptr += 2;
 
 		//Jump every element of the map
 		for (uint8_t i=0 ; i < num_ele ; ++i) {
-			jump();
-			jump();
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0xB9) {
-		uint16_t num_ele = decode_abs_num16(buffer);
-		buffer += 3;
+		uint16_t num_ele = decode_abs_num16(ptr);
+		ptr += 3;
 
 		//Jump every element of the map
 		for (uint16_t i=0 ; i < num_ele ; ++i) {
-			jump();
-			jump();
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0xBA) {
-		uint32_t num_ele = decode_abs_num32(buffer);
-		buffer += 5;
+		uint32_t num_ele = decode_abs_num32(ptr);
+		ptr += 5;
 
 		//Jump every element of the map
 		for (uint32_t i=0 ; i < num_ele ; ++i) {
-			jump();
-			jump();
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0xBB) {
-		uint64_t num_ele = decode_abs_num64(buffer);
-		buffer += 9;
+		uint64_t num_ele = decode_abs_num64(ptr);
+		ptr += 9;
 
 		//Jump every element of the map
 		for (uint64_t i=0 ; i < num_ele ; ++i) {
-			jump();
-			jump();
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 	else if (*type == 0xBF) {
 		//Jump every element of the map
-		while (*buffer != CBOR_BREAK) {
-			jump();
-			jump();
+		while (*ptr != CBOR_BREAK) {
+			ptr += element_size(ptr);
+			ptr += element_size(ptr);
 		}
 	}
 
 	//Simple value && false / true / null / undefined / floats
 	else if (*type >= 0xE0 && *type <= 0xF7) {
-		++buffer;
+		++ptr;
 	}
 	else if (*type == 0xF8) {
-		buffer += 2;
+		ptr += 2;
 	}
 	else if (*type == CBOR_FLOAT16) {
-		buffer += 3;
+		ptr += 3;
 	}
 	else if (*type == CBOR_FLOAT32) {
-		buffer += 5;
+		ptr += 5;
 	}
 	else if (*type == CBOR_FLOAT64) {
-		buffer += 9;
+		ptr += 9;
 	}
 	else {
 		return 0;
 	}
 
-	return (buffer - type);
+	return (ptr - type);
 }
 
 bool CBOR::add()
@@ -496,7 +496,7 @@ bool CBOR::add()
 		return false;
 	}
 
-	*(buffer++) = CBOR_NULL;
+	*(w_ptr++) = CBOR_NULL;
 
 	return true;
 }
@@ -507,7 +507,7 @@ bool CBOR::add(bool value)
 		return false;
 	}
 
-	*(buffer++) = (value)?CBOR_TRUE:CBOR_FALSE;
+	*(w_ptr++) = (value)?CBOR_TRUE:CBOR_FALSE;
 
 	return true;
 }
@@ -581,13 +581,13 @@ bool CBOR::add(float value)
 		return false;
 	}
 
-	*(buffer++) = CBOR_FLOAT32;
+	*(w_ptr++) = CBOR_FLOAT32;
 
 	val_bytes = (uint8_t*)&value + 3;
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *val_bytes;
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *val_bytes;
 
 	return true;
 }
@@ -607,17 +607,17 @@ bool CBOR::add(double value)
 		return false;
 	}
 
-	*(buffer++) = CBOR_FLOAT64;
+	*(w_ptr++) = CBOR_FLOAT64;
 
 	val_bytes = (uint8_t*)&value + 7;
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *(val_bytes--);
-	*(buffer++) = *val_bytes;
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *(val_bytes--);
+	*(w_ptr++) = *val_bytes;
 
 	return true;
 }
@@ -631,9 +631,9 @@ bool CBOR::add(const char* value)
 			return true;
 		}
 		else if (reserve(len_string)) {
-			memcpy(buffer, value, len_string*sizeof(uint8_t));
+			memcpy(w_ptr, value, len_string*sizeof(uint8_t));
 
-			buffer += len_string;
+			w_ptr += len_string;
 
 			return true;
 		}
@@ -650,168 +650,168 @@ bool CBOR::add(const CBOR &value)
 		return false;
 	}
 
-	memcpy(buffer, value.to_CBOR(), len_cbor*sizeof(uint8_t));
+	memcpy(w_ptr, value.to_CBOR(), len_cbor*sizeof(uint8_t));
 
-	buffer += len_cbor;
+	w_ptr += len_cbor;
 
 	return true;
 }
 
-bool CBOR::is_null(const uint8_t* _buffer)
+bool CBOR::is_null(const uint8_t* buffer)
 {
-	return (_buffer[0] == CBOR_NULL)?true:false;
+	return (buffer[0] == CBOR_NULL)?true:false;
 }
 
-bool CBOR::is_bool(const uint8_t* _buffer)
+bool CBOR::is_bool(const uint8_t* buffer)
 {
-	return ((_buffer[0] == CBOR_FALSE) || (_buffer[0] == CBOR_TRUE))?true:false;
+	return ((buffer[0] == CBOR_FALSE) || (buffer[0] == CBOR_TRUE))?true:false;
 }
 
-bool CBOR::is_uint8(const uint8_t* _buffer)
+bool CBOR::is_uint8(const uint8_t* buffer)
 {
-	if ((_buffer[0] <= 23) || (_buffer[0] == (CBOR_UINT|CBOR_UINT8_FOLLOWS))) {
+	if ((buffer[0] <= 23) || (buffer[0] == (CBOR_UINT|CBOR_UINT8_FOLLOWS))) {
 		return true;
 	}
 	return false;
 }
 
-bool CBOR::is_uint16(const uint8_t* _buffer)
+bool CBOR::is_uint16(const uint8_t* buffer)
 {
-	return ((_buffer[0] == (CBOR_UINT|CBOR_UINT16_FOLLOWS)) \
-			|| is_uint8(_buffer))?true:false;
+	return ((buffer[0] == (CBOR_UINT|CBOR_UINT16_FOLLOWS)) \
+			|| is_uint8(buffer))?true:false;
 }
 
-bool CBOR::is_uint32(const uint8_t* _buffer)
+bool CBOR::is_uint32(const uint8_t* buffer)
 {
-	return ((_buffer[0] == (CBOR_UINT|CBOR_UINT32_FOLLOWS)) \
-			|| is_uint16(_buffer))?true:false;
+	return ((buffer[0] == (CBOR_UINT|CBOR_UINT32_FOLLOWS)) \
+			|| is_uint16(buffer))?true:false;
 }
 
-bool CBOR::is_uint64(const uint8_t* _buffer)
+bool CBOR::is_uint64(const uint8_t* buffer)
 {
-	return ((_buffer[0] == (CBOR_UINT|CBOR_UINT64_FOLLOWS)) \
-			|| is_uint32(_buffer))?true:false;
+	return ((buffer[0] == (CBOR_UINT|CBOR_UINT64_FOLLOWS)) \
+			|| is_uint32(buffer))?true:false;
 }
 
-bool CBOR::is_int8(const uint8_t* _buffer)
+bool CBOR::is_int8(const uint8_t* buffer)
 {
-	uint8_t abs_val = decode_abs_num8(_buffer);
+	uint8_t abs_val = decode_abs_num8(buffer);
 
-	if ((abs_val <= 0x7F) && is_uint8(_buffer)) {
+	if ((abs_val <= 0x7F) && is_uint8(buffer)) {
 		return true;
 	}
 
 	if ((abs_val <= 0x80) \
-			&& (_buffer[0] >= CBOR_NEGINT) \
-			&& (_buffer[0] <= (CBOR_NEGINT|CBOR_UINT8_FOLLOWS))) {
+			&& (buffer[0] >= CBOR_NEGINT) \
+			&& (buffer[0] <= (CBOR_NEGINT|CBOR_UINT8_FOLLOWS))) {
 		return true;
 	}
 
 	return false;
 }
 
-bool CBOR::is_int16(const uint8_t* _buffer)
+bool CBOR::is_int16(const uint8_t* buffer)
 {
 	//All CBOR UINT8 and NEGINT8
-	if (is_uint8(_buffer) || (_buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS))) {
+	if (is_uint8(buffer) || (buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS))) {
 		return true;
 	}
 
-	uint16_t abs_val = decode_abs_num16(_buffer);
+	uint16_t abs_val = decode_abs_num16(buffer);
 
-	if ((abs_val <= 0x7FFF) && is_uint16(_buffer)) {
+	if ((abs_val <= 0x7FFF) && is_uint16(buffer)) {
 		return true;
 	}
 
 	if ((abs_val <= 0x8000) \
-			&& (_buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS))) {
+			&& (buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS))) {
 		return true;
 	}
 
 	return false;
 }
 
-bool CBOR::is_int32(const uint8_t* _buffer)
+bool CBOR::is_int32(const uint8_t* buffer)
 {
 	//All CBOR UINT{8,16} and NEGINT{8,16}
-	if (is_uint16(_buffer) || (_buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS)) \
-			|| (_buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS))) {
+	if (is_uint16(buffer) || (buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS)) \
+			|| (buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS))) {
 		return true;
 	}
 
-	uint32_t abs_val = decode_abs_num32(_buffer);
+	uint32_t abs_val = decode_abs_num32(buffer);
 
-	if ((abs_val <= 0x7FFFFFFF) && is_uint32(_buffer)) {
+	if ((abs_val <= 0x7FFFFFFF) && is_uint32(buffer)) {
 		return true;
 	}
 
 	if ((abs_val <= 0x80000000) \
-			&& (_buffer[0] == (CBOR_NEGINT|CBOR_UINT32_FOLLOWS))) {
+			&& (buffer[0] == (CBOR_NEGINT|CBOR_UINT32_FOLLOWS))) {
 		return true;
 	}
 
 	return false;
 }
 
-bool CBOR::is_int64(const uint8_t* _buffer)
+bool CBOR::is_int64(const uint8_t* buffer)
 {
 	//All CBOR UINT{8,16,32} and NEGINT{8,16,32}
-	if (is_uint32(_buffer) || (_buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS)) \
-			|| (_buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS)) \
-			|| (_buffer[0] == (CBOR_NEGINT|CBOR_UINT32_FOLLOWS))) {
+	if (is_uint32(buffer) || (buffer[0] == (CBOR_NEGINT|CBOR_UINT8_FOLLOWS)) \
+			|| (buffer[0] == (CBOR_NEGINT|CBOR_UINT16_FOLLOWS)) \
+			|| (buffer[0] == (CBOR_NEGINT|CBOR_UINT32_FOLLOWS))) {
 		return true;
 	}
 
-	uint64_t abs_val = decode_abs_num64(_buffer);
+	uint64_t abs_val = decode_abs_num64(buffer);
 
-	if ((abs_val <= 0x7FFFFFFFFFFFFFFF) && is_uint32(_buffer)) {
+	if ((abs_val <= 0x7FFFFFFFFFFFFFFF) && is_uint32(buffer)) {
 		return true;
 	}
 
 	if ((abs_val <= 0x8000000000000000) \
-			&& (_buffer[0] == (CBOR_NEGINT|CBOR_UINT64_FOLLOWS))) {
+			&& (buffer[0] == (CBOR_NEGINT|CBOR_UINT64_FOLLOWS))) {
 		return true;
 	}
 
 	return false;
 }
 
-bool CBOR::is_float16(const uint8_t* _buffer)
+bool CBOR::is_float16(const uint8_t* buffer)
 {
-	return (_buffer[0] == CBOR_FLOAT16)?true:false;
+	return (buffer[0] == CBOR_FLOAT16)?true:false;
 }
 
-bool CBOR::is_float32(const uint8_t* _buffer)
+bool CBOR::is_float32(const uint8_t* buffer)
 {
-	if (is_float16(_buffer)) {
+	if (is_float16(buffer)) {
 		return true;
 	}
 
-	return (_buffer[0] == CBOR_FLOAT32)?true:false;
+	return (buffer[0] == CBOR_FLOAT32)?true:false;
 }
 
-bool CBOR::is_float64(const uint8_t* _buffer)
+bool CBOR::is_float64(const uint8_t* buffer)
 {
-	if (is_float16(_buffer) || is_float32(_buffer)) {
+	if (is_float16(buffer) || is_float32(buffer)) {
 		return true;
 	}
 
-	return (_buffer[0] == CBOR_FLOAT64)?true:false;
+	return (buffer[0] == CBOR_FLOAT64)?true:false;
 }
 
-bool CBOR::is_string(const uint8_t* _buffer)
+bool CBOR::is_string(const uint8_t* buffer)
 {
-	return ((_buffer[0]&CBOR_7) == CBOR_TEXT)?true:false;
+	return ((buffer[0]&CBOR_7) == CBOR_TEXT)?true:false;
 }
 
-bool CBOR::is_array(const uint8_t* _buffer)
+bool CBOR::is_array(const uint8_t* buffer)
 {
-	return ((_buffer[0]&CBOR_7) == CBOR_ARRAY)?true:false;
+	return ((buffer[0]&CBOR_7) == CBOR_ARRAY)?true:false;
 }
 
-bool CBOR::is_pair(const uint8_t* _buffer)
+bool CBOR::is_pair(const uint8_t* buffer)
 {
-	return ((_buffer[0]&CBOR_7) == CBOR_MAP)?true:false;
+	return ((buffer[0]&CBOR_7) == CBOR_MAP)?true:false;
 }
 
 CBOR::operator bool() const
@@ -959,10 +959,12 @@ CBOR::operator float() const
 {
 	float ret_val = 0.0;
 	uint8_t *ret_val_bytes = (uint8_t*)&ret_val;
+	uint8_t *buf = NULL;
 
 	if (is_float16()) {
-		uint8_t exp = (get_buffer_begin()[1]>>2)&0x1f;
-		uint16_t mant = (get_buffer_begin()[1]&0x03)<<8 | get_buffer_begin()[2];
+		buf = get_buffer_begin();
+		uint8_t exp = (buf[1]>>2)&0x1f;
+		uint16_t mant = (buf[1]&0x03)<<8 | buf[2];
 
 		//Subnormals
 		if (exp == 0) {
@@ -976,11 +978,11 @@ CBOR::operator float() const
 			ret_val = ldexp(mant + 1024, exp - 25);
 		}
 
-		return (get_buffer_begin()[1]&0x80) ? -ret_val : ret_val;
+		return (buf[1]&0x80) ? -ret_val : ret_val;
 	}
 
 	if (is_float32()) {
-		uint8_t *buf = &(get_buffer_begin()[4]);
+		buf = get_buffer_begin() + 4;
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);
@@ -1001,16 +1003,18 @@ CBOR::operator double() const
 
 	double ret_val = 0.0;
 	uint8_t *ret_val_bytes = (uint8_t*)&ret_val;
+	uint8_t *buf = NULL;
 
 	if (is_float64()) {
 		//On AVR arduino, double is the same as float...
 		//In this case, we convert from 64-bit float to 32-bit float
 		if(sizeof(double) == 4) {
-			int32_t exp = ((get_buffer_begin()[1]&0x7F)<<4)|((get_buffer_begin()[2]&0xF0)>>4);
-			uint32_t mant = ((uint32_t)(get_buffer_begin()[2]&0x0F)<<19) \
-							| ((uint32_t)(get_buffer_begin()[3])<<11) \
-							| ((uint32_t)(get_buffer_begin()[4])<<3) \
-							| ((uint32_t)((get_buffer_begin()[5])&0xE0)>>5);
+			buf = get_buffer_begin();
+			int32_t exp = ((buf[1]&0x7F)<<4)|((buf[2]&0xF0)>>4);
+			uint32_t mant = ((uint32_t)(buf[2]&0x0F)<<19) \
+							| ((uint32_t)(buf[3])<<11) \
+							| ((uint32_t)(buf[4])<<3) \
+							| ((uint32_t)((buf[5])&0xE0)>>5);
 			//Subnormals
 			if (exp == 0) {
 				ret_val = ldexp(mant, -149);
@@ -1031,10 +1035,10 @@ CBOR::operator double() const
 				ret_val = ldexp((float)mant + 8388608.0, (exp-1023) - 23);
 			}
 
-			return (get_buffer_begin()[1]&0x80) ? -ret_val : ret_val;
+			return (buf[1]&0x80) ? -ret_val : ret_val;
 		}
 
-		uint8_t *buf = get_buffer_begin()+8;
+		buf = get_buffer_begin() + 8;
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);

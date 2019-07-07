@@ -16,7 +16,7 @@ class CBORArray: public CBOR
 		//      ^     ^        ^                        ^
 		//      |     |        +--- buffer_data_begin   |
 		//      |     +--- buffer_begin                 |
-		//ext_buffer_begin                            buffer
+		//ext_buffer_begin                            w_ptr
 		uint8_t *ext_buffer_begin, *buffer_data_begin;
 
 		void init_num_ele(size_t num_ele);

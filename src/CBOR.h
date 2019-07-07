@@ -51,7 +51,7 @@ class CBOR
 			uint8_t static_buffer_begin[STATIC_ALLOC_SIZE];
 			uint8_t *buffer_begin;
 		};
-		uint8_t *buffer = static_buffer_begin;
+		uint8_t *w_ptr = static_buffer_begin;
 		size_t max_buf_len = STATIC_ALLOC_SIZE;
 		uint8_t buffer_type = BUFFER_STATIC_INTERNAL;
 
@@ -67,11 +67,11 @@ class CBOR
 		bool encode_type_num(uint8_t cbor_type, uint64_t val);
 
 		bool is_neg_num() const;
-		static uint8_t decode_abs_num8(const uint8_t *_buffer);
-		static uint16_t decode_abs_num16(const uint8_t *_buffer);
-		static uint32_t decode_abs_num32(const uint8_t *_buffer);
-		static uint64_t decode_abs_num64(const uint8_t *_buffer);
-		static size_t decode_abs_num(const uint8_t *_buffer);
+		static uint8_t decode_abs_num8(const uint8_t *buffer);
+		static uint16_t decode_abs_num16(const uint8_t *buffer);
+		static uint32_t decode_abs_num32(const uint8_t *buffer);
+		static uint64_t decode_abs_num64(const uint8_t *buffer);
+		static size_t decode_abs_num(const uint8_t *buffer);
 
 		static uint8_t compute_type_num_len(size_t num_ele);
 
@@ -82,7 +82,7 @@ class CBOR
 		size_t decode_abs_num() const { return decode_abs_num(get_buffer_begin()); };
 
 		//Jump to the end of this item
-		size_t jump();
+		static size_t element_size(uint8_t *ptr);
 
 		bool add();
 		bool add(bool value);
@@ -119,32 +119,32 @@ class CBOR
 		CBOR(const char* value);
 
 		//External buffer
-		CBOR(uint8_t* _buffer, size_t buffer_len, bool has_data = true);
+		CBOR(uint8_t* buffer, size_t buffer_len, bool has_data = true);
 
 		//Copy constructor
 		CBOR(const CBOR &obj);
 
 		~CBOR();
 
-		virtual size_t length() const { return (size_t)(buffer - get_buffer_begin()); }
+		virtual size_t length() const { return (size_t)(w_ptr - get_buffer_begin()); }
 		virtual const uint8_t* to_CBOR() { return get_buffer_begin(); }
 
-		static bool is_null(const uint8_t* _buffer);
-		static bool is_bool(const uint8_t* _buffer);
-		static bool is_uint8(const uint8_t* _buffer);
-		static bool is_uint16(const uint8_t* _buffer);
-		static bool is_uint32(const uint8_t* _buffer);
-		static bool is_uint64(const uint8_t* _buffer);
-		static bool is_int8(const uint8_t* _buffer);
-		static bool is_int16(const uint8_t* _buffer);
-		static bool is_int32(const uint8_t* _buffer);
-		static bool is_int64(const uint8_t* _buffer);
-		static bool is_float16(const uint8_t* _buffer);
-		static bool is_float32(const uint8_t* _buffer);
-		static bool is_float64(const uint8_t* _buffer);
-		static bool is_string(const uint8_t* _buffer);
-		static bool is_array(const uint8_t* _buffer);
-		static bool is_pair(const uint8_t* _buffer);
+		static bool is_null(const uint8_t* buffer);
+		static bool is_bool(const uint8_t* buffer);
+		static bool is_uint8(const uint8_t* buffer);
+		static bool is_uint16(const uint8_t* buffer);
+		static bool is_uint32(const uint8_t* buffer);
+		static bool is_uint64(const uint8_t* buffer);
+		static bool is_int8(const uint8_t* buffer);
+		static bool is_int16(const uint8_t* buffer);
+		static bool is_int32(const uint8_t* buffer);
+		static bool is_int64(const uint8_t* buffer);
+		static bool is_float16(const uint8_t* buffer);
+		static bool is_float32(const uint8_t* buffer);
+		static bool is_float64(const uint8_t* buffer);
+		static bool is_string(const uint8_t* buffer);
+		static bool is_array(const uint8_t* buffer);
+		static bool is_pair(const uint8_t* buffer);
 
 		bool is_null() const {return is_null(get_buffer_begin()); };
 		bool is_bool() const {return is_bool(get_buffer_begin()); };

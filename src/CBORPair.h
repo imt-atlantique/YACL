@@ -17,11 +17,14 @@ class CBORPair: public CBOR
 		//      ^     ^        ^                        ^
 		//      |     |        +--- buffer_data_begin   |
 		//      |     +--- buffer_begin                 |
-		//ext_buffer_begin                            buffer
+		//ext_buffer_begin                            w_ptr
 		uint8_t *ext_buffer_begin, *buffer_data_begin;
 
 		void init_num_ele(size_t num_ele);
 		void increment_num_ele() { init_num_ele(n_elements()+1); };
+
+		static bool buffer_equals(const uint8_t* buf1, size_t len_buf1,
+				const uint8_t* buf2, size_t len_buf2);
 
 		bool init_buffer();
 	public:
@@ -49,66 +52,36 @@ class CBORPair: public CBOR
 
 		template <typename T> CBOR operator[](T key)
 		{
-			CBOR idx_cbor = CBOR(key);
-			uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
-			size_t idx_cbor_size = idx_cbor.length();
-			bool equals = true;
-
-			//Save buffer position
-			uint8_t *old_buffer = buffer;
-			uint8_t *ele_begin = NULL;
-			size_t ele_size = 0;
-
 			if (!is_pair()) {
 				return CBOR();
 			}
 
-			//Put buffer on the first element of the table
-			buffer = buffer_data_begin;
+			CBOR idx_cbor = CBOR(key);
+			uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
+			size_t idx_cbor_size = idx_cbor.length();
+			uint8_t *ele_begin = buffer_data_begin;
 
 			//Search key until the end of the Pair (map) is found
 			for (size_t i=0 ; i < n_elements() ; ++i) {
-				//Retrieve key and jump to value
-				ele_begin = buffer;
-				ele_size = jump();
+				//If key match
+				if (buffer_equals(idx_cbor_buffer, idx_cbor_size, ele_begin, element_size(ele_begin))) {
+					ele_begin += element_size(ele_begin);
 
-				//Check keys lengths
-				if(idx_cbor_size == ele_size) {
-					//Compare CBOR representation of keys values
-					for (size_t j=0 ; j < ele_size ; ++j) {
-						if (idx_cbor_buffer[j] != ele_begin[j]) {
-							equals = false;
-							break;
-						}
-					}
-
-					if (equals) {
-						//Retrieve value
-						ele_begin = buffer;
-						ele_size = jump();
-
-						//Put back buffer in its initial position
-						buffer = old_buffer;
-
-						return CBOR(ele_begin, ele_size, true);
-					}
-					//If keys are not the same, jump to next key
-					else {
-						equals = true;
-						jump();
-					}
+					return CBOR(ele_begin, element_size(ele_begin), true);
 				}
-				//If keys are not the same, jump to next key
 				else {
-					jump();
+					//Key don't match, jump to next key
+					ele_begin += element_size(ele_begin);
+					ele_begin += element_size(ele_begin);
 				}
 			}
 
 			//Not found
-			//Put back buffer in its initial position
-			buffer = old_buffer;
 			return CBOR();
 		}
+
+		CBOR at(size_t idx);
+		CBOR key_at(size_t idx);
 
 		size_t n_elements() const { return decode_abs_num(); }
 		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
