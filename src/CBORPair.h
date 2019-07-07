@@ -2,7 +2,8 @@
 #define INCLUDED_CBORPAIR_H
 
 #include "CBOR.h"
-#include "Arduino.h"
+
+#define NUM_ELE_PROVISION 9
 
 class CBORPair: public CBOR
 {
@@ -28,6 +29,7 @@ class CBORPair: public CBOR
 
 		bool init_buffer();
 	public:
+		CBORPair();
 		CBORPair(size_t buf_len);
 		CBORPair(const CBORPair &obj);
 		//If has_data == true, then new elements can be added.
@@ -83,6 +85,7 @@ class CBORPair: public CBOR
 		CBOR at(size_t idx);
 		CBOR key_at(size_t idx);
 
+		bool reserve(size_t length);
 		size_t n_elements() const { return decode_abs_num(); }
 		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
 };

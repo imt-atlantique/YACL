@@ -12,13 +12,44 @@ bool CBORArray::init_buffer()
 		return false;
 	}
 
-	buffer_data_begin = ext_buffer_begin + 9;
-	buffer_begin = ext_buffer_begin + 8; //type_num_len is 1 for array size 0
+	buffer_data_begin = ext_buffer_begin + NUM_ELE_PROVISION;
+	buffer_begin = ext_buffer_begin + NUM_ELE_PROVISION - 1; //type_num_len is 1 for array size 0
 	w_ptr = buffer_data_begin;
 
 	buffer_type = BUFFER_DYNAMIC_INTERNAL;
 
 	return true;
+}
+
+bool CBORArray::reserve(size_t len)
+{
+	size_t num_ele = n_elements();
+	size_t requested_len = len - compute_type_num_len(num_ele) + NUM_ELE_PROVISION;
+
+	if (requested_len <= max_buf_len) {
+		return true;
+	}
+
+	if (buffer_type == BUFFER_DYNAMIC_INTERNAL) {
+		size_t length_saved = length();
+
+		ext_buffer_begin = (uint8_t*)realloc(ext_buffer_begin,
+				sizeof(uint8_t)*requested_len);
+		if (ext_buffer_begin == NULL) {
+			return false;
+		}
+
+		//Update max buffer length and write pointer
+		max_buf_len = requested_len;
+		buffer_data_begin = ext_buffer_begin + NUM_ELE_PROVISION;
+		buffer_begin = buffer_data_begin - compute_type_num_len(num_ele);
+		w_ptr = buffer_begin + length_saved;
+
+		return true;
+	}
+
+	//BUFFER_EXTERNAL or BUFFER_STATIC_INTERNAL
+	return false;
 }
 
 void CBORArray::init_num_ele(size_t num_ele)
@@ -41,10 +72,20 @@ void CBORArray::init_num_ele(size_t num_ele)
 	return;
 }
 
+CBORArray::CBORArray()
+{
+	//Reserve enough memmory for one element of one byte
+	max_buf_len = 10;
+	init_buffer();
+
+	//Initialize num_ele
+	init_num_ele(0);
+}
+
 CBORArray::CBORArray(size_t buf_len)
 {
 	//Reserve buffer
-	max_buf_len = buf_len;
+	max_buf_len = buf_len - 1 + NUM_ELE_PROVISION;
 	init_buffer();
 
 	//Initialize num_ele
@@ -56,13 +97,13 @@ CBORArray::CBORArray(const CBORArray &obj)
 	uint8_t type_num_len = compute_type_num_len(obj.n_elements());
 	//Reserve buf_len plus maximum size of a type_num : 9 bytes to encode a
 	//table length up to (2^64)-1
-	size_t buf_len_needed = obj.length() - type_num_len + 9;
+	size_t buf_len_needed = obj.length() - type_num_len + NUM_ELE_PROVISION;
 
 	max_buf_len = buf_len_needed;
 	init_buffer();
 
 	//Reserve begining of buffer to store table length
-	buffer_begin = ext_buffer_begin + 9 - type_num_len;
+	buffer_begin = ext_buffer_begin + NUM_ELE_PROVISION - type_num_len;
 	w_ptr = buffer_begin + obj.length();
 
 	//Copy num_ele and data
@@ -89,8 +130,8 @@ CBORArray::CBORArray(uint8_t* _buffer, size_t buffer_len, bool has_data)
 	else {
 		//Reserve begining of buffer to store table length
 		ext_buffer_begin = _buffer;
-		buffer_data_begin = _buffer + 9;
-		buffer_begin = _buffer + 8; //type_num_len is 1 for array size 0
+		buffer_data_begin = _buffer + NUM_ELE_PROVISION;
+		buffer_begin = _buffer + NUM_ELE_PROVISION - 1; //type_num_len is 1 for array size 0
 		w_ptr = buffer_data_begin;
 
 		//Initialize num_ele

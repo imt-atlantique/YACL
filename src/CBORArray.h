@@ -2,6 +2,9 @@
 #define INCLUDED_CBORARRAY_H
 
 #include "CBOR.h"
+#include "Arduino.h"
+
+#define NUM_ELE_PROVISION 9
 
 class CBORArray: public CBOR
 {
@@ -24,6 +27,7 @@ class CBORArray: public CBOR
 
 		bool init_buffer();
 	public:
+		CBORArray();
 		CBORArray(size_t buf_len);
 		CBORArray(const CBORArray &obj);
 		//If has_data == true, then new elements can be added.
@@ -55,6 +59,7 @@ class CBORArray: public CBOR
 
 		CBOR operator[](size_t idx);
 
+		bool reserve(size_t length);
 		size_t n_elements() const { return decode_abs_num(); }
 		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
 };

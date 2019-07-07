@@ -58,8 +58,7 @@ class CBOR
 		uint8_t* get_buffer_begin() {
 			return (buffer_type == BUFFER_STATIC_INTERNAL)?static_buffer_begin:buffer_begin;
 		};
-		bool init_buffer();
-		bool reserve(size_t length);
+		virtual bool init_buffer();
 
 		bool encode_type_num(uint8_t cbor_type, uint8_t val);
 		bool encode_type_num(uint8_t cbor_type, uint16_t val);
@@ -126,8 +125,9 @@ class CBOR
 
 		~CBOR();
 
-		virtual size_t length() const { return (size_t)(w_ptr - get_buffer_begin()); }
-		virtual const uint8_t* to_CBOR() { return get_buffer_begin(); }
+		virtual bool reserve(size_t length);
+		size_t length() const { return (size_t)(w_ptr - get_buffer_begin()); }
+		const uint8_t* to_CBOR() { return get_buffer_begin(); }
 
 		static bool is_null(const uint8_t* buffer);
 		static bool is_bool(const uint8_t* buffer);

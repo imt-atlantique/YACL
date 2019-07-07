@@ -120,24 +120,60 @@ CBOR::~CBOR()
 
 bool CBOR::reserve(size_t len)
 {
-	if ((length() + len) <= max_buf_len) {
+	if (len <= max_buf_len) {
 		return true;
 	}
 
+	if (buffer_type == BUFFER_STATIC_INTERNAL) {
+		uint8_t buffer_saved[STATIC_ALLOC_SIZE];
+		size_t length_saved = length();
+
+		//Save static buffer
+		memcpy(buffer_saved, static_buffer_begin, STATIC_ALLOC_SIZE*sizeof(uint8_t));
+
+		//Initialize dynamic buffer
+		max_buf_len = len;
+		if (init_buffer()) {
+			//Copy saved data in newly allocated buffer
+			memcpy(buffer_begin, buffer_saved, STATIC_ALLOC_SIZE*sizeof(uint8_t));
+
+			//Update write pointer
+			w_ptr = buffer_begin + length_saved;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	if (buffer_type == BUFFER_DYNAMIC_INTERNAL) {
+		size_t length_saved = length();
+
+		buffer_begin = (uint8_t*)realloc(buffer_begin, sizeof(uint8_t)*len);
+		if (buffer_begin == NULL) {
+			return false;
+		}
+
+		//Update max buffer length and write pointer
+		max_buf_len = len;
+		w_ptr = buffer_begin + length_saved;
+	}
+
+	//BUFFER_EXTERNAL
 	return false;
 }
 
 bool CBOR::encode_type_num(uint8_t cbor_type, uint8_t val)
 {
 	if (val <= 23) {
-		if (!reserve(1)) {
+		if (!reserve(length() + 1)) {
 			return false;
 		}
 
 		*(w_ptr++) = cbor_type | val;
 	}
 	else {
-		if (!reserve(2)) {
+		if (!reserve(length() + 2)) {
 			return false;
 		}
 
@@ -154,7 +190,7 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint16_t val)
 		encode_type_num(cbor_type, (uint8_t)val);
 	}
 	else {
-		if (!reserve(3)) {
+		if (!reserve(length() + 3)) {
 			return false;
 		}
 
@@ -175,7 +211,7 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint32_t val)
 		return encode_type_num(cbor_type, (uint16_t)val);
 	}
 	else {
-		if (!reserve(5)) {
+		if (!reserve(length() + 5)) {
 			return false;
 		}
 
@@ -198,7 +234,7 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint64_t val)
 		return encode_type_num(cbor_type, (uint32_t)val);
 	}
 	else {
-		if (!reserve(9)) {
+		if (!reserve(length() + 9)) {
 			return false;
 		}
 
@@ -492,7 +528,7 @@ size_t CBOR::element_size(uint8_t *ptr)
 
 bool CBOR::add()
 {
-	if (!reserve(1)) {
+	if (!reserve(length() + 1)) {
 		return false;
 	}
 
@@ -503,7 +539,7 @@ bool CBOR::add()
 
 bool CBOR::add(bool value)
 {
-	if (!reserve(1)) {
+	if (!reserve(length() + 1)) {
 		return false;
 	}
 
@@ -577,7 +613,7 @@ bool CBOR::add(float value)
 {
 	uint8_t *val_bytes = NULL;
 
-	if (!reserve(5)) {
+	if (!reserve(length() + 5)) {
 		return false;
 	}
 
@@ -588,7 +624,6 @@ bool CBOR::add(float value)
 	*(w_ptr++) = *(val_bytes--);
 	*(w_ptr++) = *(val_bytes--);
 	*(w_ptr++) = *val_bytes;
-
 	return true;
 }
 
@@ -597,13 +632,11 @@ bool CBOR::add(double value)
 {
 	//On AVR arduino, double is the same as float...
 	if (sizeof(double) == 4) {
-		add((float)value);
-
-		return true;
+		return add((float)value);
 	}
 
 	uint8_t *val_bytes = NULL;
-	if (!reserve(9)) {
+	if (!reserve(length() + 9)) {
 		return false;
 	}
 
@@ -626,27 +659,29 @@ bool CBOR::add(const char* value)
 {
 	size_t len_string = strlen(value);
 
-	if(encode_type_num(CBOR_TEXT, len_string*sizeof(uint8_t))) {
-		if (len_string == 0) {
-			return true;
-		}
-		else if (reserve(len_string)) {
-			memcpy(w_ptr, value, len_string*sizeof(uint8_t));
-
-			w_ptr += len_string;
-
-			return true;
-		}
+	//Check buffer size
+	if (!reserve(length() + len_string + compute_type_num_len(len_string))) {
+		return false;
 	}
 
-	return false;
+	//Encode string length
+	encode_type_num(CBOR_TEXT, len_string*sizeof(uint8_t));
+	if (len_string == 0) {
+		return true;
+	}
+
+	//Copy string content (without '\0')
+	memcpy(w_ptr, value, len_string*sizeof(uint8_t));
+	w_ptr += len_string;
+
+	return true;
 }
 
 bool CBOR::add(const CBOR &value)
 {
 	size_t len_cbor = value.length();
 
-	if (!reserve(len_cbor)) {
+	if (!reserve(length() + len_cbor)) {
 		return false;
 	}
 
@@ -1072,7 +1107,7 @@ void CBOR::get_string(String& str) const
 {
 	size_t len_str = get_string_len();
 
-	str.reserve(len_str);
+	str.reserve(length() + len_str);
 
 	str = "";
 	for (uint8_t* i=get_buffer_begin()+1 ; i < (get_buffer_begin()+1+len_str) ; ++i) {
