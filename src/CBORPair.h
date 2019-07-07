@@ -1,37 +1,17 @@
 #ifndef INCLUDED_CBORPAIR_H
 #define INCLUDED_CBORPAIR_H
 
-#include "CBOR.h"
+#include "CBORComposed.h"
 
-#define NUM_ELE_PROVISION 9
-
-class CBORPair: public CBOR
+class CBORPair: public CBORComposed<CBOR_MAP>
 {
 	protected:
-		//Buffer is allocated as follows:
-		//         Provision
-		//        for num_ele
-		//     <-------------->
-		//             num_ele            data
-		//           <--------><---------------------->
-		//     |  |  |  |  |  |  |  |  |  |  |  |  |  |
-		//      ^     ^        ^                        ^
-		//      |     |        +--- buffer_data_begin   |
-		//      |     +--- buffer_begin                 |
-		//ext_buffer_begin                            w_ptr
-		uint8_t *ext_buffer_begin, *buffer_data_begin;
-
-		void init_num_ele(size_t num_ele);
-		void increment_num_ele() { init_num_ele(n_elements()+1); };
-
 		static bool buffer_equals(const uint8_t* buf1, size_t len_buf1,
 				const uint8_t* buf2, size_t len_buf2);
-
-		bool init_buffer();
 	public:
-		CBORPair();
-		CBORPair(size_t buf_len);
-		CBORPair(const CBORPair &obj);
+		CBORPair() : CBORComposed() {};
+		CBORPair(size_t buf_len) : CBORComposed(buf_len) {};
+		CBORPair(const CBORPair &obj) : CBORComposed(obj) {};
 		//If has_data == true, then new elements can be added.
 		//However, the size of the length field cannot be expanded
 		//(expect less than 2^64-1 elements capacity).
@@ -39,7 +19,6 @@ class CBORPair: public CBOR
 		//With this constructor, CBOR Object must contain a cbor Pair
 		//Same as above: the size of the length field cannot be expanded.
 		CBORPair(const CBOR &obj);
-		~CBORPair();
 
 		template <typename T, typename U> bool append(T key, U value)
 		{
@@ -84,10 +63,6 @@ class CBORPair: public CBOR
 
 		CBOR at(size_t idx);
 		CBOR key_at(size_t idx);
-
-		bool reserve(size_t length);
-		size_t n_elements() const { return decode_abs_num(); }
-		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
 };
 
 #endif

@@ -1,35 +1,14 @@
 #ifndef INCLUDED_CBORARRAY_H
 #define INCLUDED_CBORARRAY_H
 
-#include "CBOR.h"
-#include "Arduino.h"
+#include "CBORComposed.h"
 
-#define NUM_ELE_PROVISION 9
-
-class CBORArray: public CBOR
+class CBORArray: public CBORComposed<CBOR_ARRAY>
 {
-	protected:
-		//Buffer is allocated as follows:
-		//         Provision
-		//        for num_ele
-		//     <-------------->
-		//             num_ele            data
-		//           <--------><---------------------->
-		//     |  |  |  |  |  |  |  |  |  |  |  |  |  |
-		//      ^     ^        ^                        ^
-		//      |     |        +--- buffer_data_begin   |
-		//      |     +--- buffer_begin                 |
-		//ext_buffer_begin                            w_ptr
-		uint8_t *ext_buffer_begin, *buffer_data_begin;
-
-		void init_num_ele(size_t num_ele);
-		void increment_num_ele() { init_num_ele(n_elements()+1); };
-
-		bool init_buffer();
 	public:
-		CBORArray();
-		CBORArray(size_t buf_len);
-		CBORArray(const CBORArray &obj);
+		CBORArray() : CBORComposed() {};
+		CBORArray(size_t buf_len) : CBORComposed(buf_len) {};
+		CBORArray(const CBORArray &obj) : CBORComposed(obj) {};
 		//If has_data == true, then new elements can be added.
 		//However, the size of the length field cannot be expanded
 		//(expect less than 2^64-1 elements capacity).
@@ -37,7 +16,6 @@ class CBORArray: public CBOR
 		//With this constructor, CBOR Object must contain a cbor array
 		//Same as above: the size of the length field cannot be expanded.
 		CBORArray(const CBOR &obj);
-		~CBORArray();
 
 		bool append();
 		template <typename T> bool append(T value)
@@ -58,10 +36,6 @@ class CBORArray: public CBOR
 		}
 
 		CBOR operator[](size_t idx);
-
-		bool reserve(size_t length);
-		size_t n_elements() const { return decode_abs_num(); }
-		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
 };
 
 #endif
