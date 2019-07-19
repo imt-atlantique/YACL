@@ -92,6 +92,9 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 		 * Note that, as there is sometimes different CBOR representation of
 		 * a single value (e.g.: 4 can be coded with (u)int{8,16,32,64}), it may
 		 * be required to construct a CBOR object and pass it as the key.
+		 * If the CBOR PAIR object has two values associated with the same key,
+		 * this operator will return the first one in order of appearence in the
+		 * data buffer.
 		 *
 		 * \param key The key of the CBOR value to be retrieved.
 		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
