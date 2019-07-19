@@ -89,6 +89,9 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 		/*!
 		 * This operator does not perform any copy.
 		 * However, it cannot be used to modify the value at key `key`.
+		 * Note that, as there is sometimes different CBOR representation of
+		 * a single value (e.g.: 4 can be coded with (u)int{8,16,32,64}), it may
+		 * be required to construct a CBOR object and pass it as the key.
 		 *
 		 * \param key The key of the CBOR value to be retrieved.
 		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
