@@ -197,7 +197,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 		/*!
 		 * \return The number of elements in this composed CBOR object.
 		 */
-		size_t n_elements() const { return decode_abs_num(); }
+		size_t n_elements() const { return decode_abs_num(get_buffer_begin()); }
 
 		//! Get the maximum number of elements that can fit in this composed CBOR object.
 		/*!
