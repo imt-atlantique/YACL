@@ -3,24 +3,46 @@
 
 #include "CBOR.h"
 
+//! Maximum binary size occupied by the number of elements counter.
 #define NUM_ELE_PROVISION 9
 
+//! A class to handle composed CBOR Objects.
+/*!
+ * This class handles encoding and decoding of basic CBOR data (int, float,
+ * strings) into a composed CBOR objects such as an array or a dictionary of
+ * key/values.
+ * 
+ * \tparam cbor_type The byte corresponding to the composed CBOR type
+ * (0x80 for CBOR arrays, 0xA0 for CBOR dictionaries).
+ */
 template <uint8_t cbor_type> class CBORComposed: public CBOR
 {
 	protected:
-		//Buffer is allocated as follows:
-		//         Provision
-		//        for num_ele
-		//     <-------------->
-		//             num_ele            data
-		//           <--------><---------------------->
-		//     |  |  |  |  |  |  |  |  |  |  |  |  |  |
-		//      ^     ^        ^                        ^
-		//      |     |        +--- buffer_data_begin   |
-		//      |     +--- buffer_begin                 |
-		//ext_buffer_begin                            w_ptr
+		/*!
+		 * Buffer is allocated as follows:
+		 *                          Total buffer length
+		 *      <----------------------------------------------------------->
+		 *          Provision
+		 *         for num_ele
+		 *      <-------------->
+		 *              num_ele            data
+		 *            <--------><---------------------->
+		 *      |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+		 *       ^     ^        ^                        ^
+		 *       |     |        +--- buffer_data_begin   |
+		 *       |     +--- buffer_begin                 |
+		 * ext_buffer_begin                            w_ptr
+		 */
 		uint8_t *ext_buffer_begin, *buffer_data_begin;
 
+		//! Encodes a number of elements.
+		/*!
+		 * Encodes the number of elements, and makes the necessary changes in
+		 * `buffer_begin` so that it actually points to the begining of the
+		 * composed CBOR object (including its length).
+		 *
+		 * \param num_ele The number of elements to encode.
+		 */
 		void init_num_ele(size_t num_ele)
 		{
 			//Save buffer
@@ -41,8 +63,17 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			return;
 		}
 
+		//! Increment the number of elements by one.
 		void increment_num_ele() { init_num_ele(n_elements()+1); };
 
+		/*!
+		 * Initialize a dynamically allocated internal buffer, with size
+		 * `max_buf_len + NUM_ELE_PROVISION`.
+		 * It will also place `ext_buffer_begin`, `buffer_data_begin` and
+		 * `buffer_begin` to the right positions.
+		 *
+		 * \return true if allocation is successful, false otherwise.
+		 */
 		bool init_buffer()
 		{
 			//Reserve begining of buffer to store table length
@@ -63,7 +94,10 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 
 			return true;
 		}
-	public:
+
+		/*! Construct a composed CBOR object with a DYNAMIC_INTERNAL buffer, big
+		 * enough to fit one element of one byte.
+		 */
 		CBORComposed()
 		{
 			//Reserve enough memmory for one element of one byte
@@ -74,6 +108,12 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			init_num_ele(0);
 		}
 
+		//! Construct a composed CBOR object with a custom length DYNAMIC_INTERNAL buffer.
+		/*!
+		 * The total length of the alocated buffer is `buf_len - 1 + NUM_ELE_PROVISION`.
+		 *
+		 * \param buf_len Buffer size, in bytes, of the data section of the buffer.
+		 */
 		CBORComposed(size_t buf_len)
 		{
 			//Reserve buffer
@@ -84,6 +124,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			init_num_ele(0);
 		}
 
+		//! Copy constructor.
 		CBORComposed(const CBORComposed &obj)
 		{
 			uint8_t type_num_len = compute_type_num_len(obj.n_elements());
@@ -102,6 +143,8 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			memcpy(buffer_begin, obj.to_CBOR(), obj.length());
 		}
 
+	public:
+		//! Destructor
 		~CBORComposed()
 		{
 			if(buffer_type == BUFFER_DYNAMIC_INTERNAL) {
@@ -109,6 +152,16 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			}
 		}
 
+		//! Reserve some space in the buffer.
+		/*
+		 * - If buffer is DYNAMIC_INTERNAL, then reserve will do necessary
+		 * reallocation to accomodate for the total length given in parameter
+		 * (if needed).
+		 * - If buffer is EXTERNAL or STATIC_INTERNAL, then reserve will do nothing.
+		 *
+		 * \param length The requested buffer length.
+		 * \return True if buffer is large enough, or if reallocation was successful.
+		 */
 		bool reserve(size_t len)
 		{
 			size_t num_ele = n_elements();
@@ -139,7 +192,18 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			//BUFFER_EXTERNAL or BUFFER_STATIC_INTERNAL
 			return false;
 		}
+
+		//! Get the number of elements in this composed CBOR object.
+		/*!
+		 * \return The number of elements in this composed CBOR object.
+		 */
 		size_t n_elements() const { return decode_abs_num(); }
+
+		//! Get the maximum number of elements that can fit in this composed CBOR object.
+		/*!
+		 * \return The maximum number of elements that can fit in this composed
+		 * CBOR object.
+		 */
 		size_t max_n_elements() const { return (1<<(buffer_data_begin - ext_buffer_begin)); }
 };
 

@@ -3,23 +3,77 @@
 
 #include "CBORComposed.h"
 
+//! A class to handle CBOR dictionaries of key/value pairs.
+/*!
+ * This class handles encoding and decoding of CBOR data key/values into a
+ * CBOR Array dictionaries.
+ */
 class CBORPair: public CBORComposed<CBOR_MAP>
 {
 	protected:
+		//! Check if two buffers store the same information.
+		/*!
+		 * Check that the two buffers have same length, and that they store
+		 * the same information.
+		 *
+		 * \param buf1 First buffer.
+		 * \param len_buf1 Number of elements in first buffer.
+		 * \param buf2 Second buffer.
+		 * \param len_buf2 Number of elements in second buffer.
+		 */
 		static bool buffer_equals(const uint8_t* buf1, size_t len_buf1,
 				const uint8_t* buf2, size_t len_buf2);
 	public:
+		/*!
+		 * Construct a CBOR PAIR with a DYNAMIC_INTERNAL buffer, big
+		 * enough to fit one element of one byte.
+		 */
 		CBORPair() : CBORComposed() {};
+
+		//! Construct a CBOR PAIR with a custom length DYNAMIC_INTERNAL buffer.
+		/*!
+		 * The total length of the alocated buffer is `buf_len - 1 + NUM_ELE_PROVISION`.
+		 *
+		 * \param buf_len Buffer size, in bytes, of the data section of the buffer.
+		 */
 		CBORPair(size_t buf_len) : CBORComposed(buf_len) {};
+
+		//! Copy constructor.
 		CBORPair(const CBORPair &obj) : CBORComposed(obj) {};
-		//If has_data == true, then new elements can be added.
-		//However, the size of the length field cannot be expanded
-		//(expect less than 2^64-1 elements capacity).
+
+		//! Construct a CBOR PAIR using an external buffer.
+		/*!
+		 * If has_data == true, then new elements can be added.
+		 * However, the size of the length field cannot be expanded
+		 * (expect less than 2^NUM_ELE_PROVISION-1 elements capacity).
+		 *
+		 * \param buffer Pointer to the beginning of the external buffer.
+		 * \param buffer_len Size (in bytes) of the external buffer.
+		 * \param has_data True if external buffer already contains a CBOR object,
+		 *  false otherwise.
+		 */
 		CBORPair(uint8_t* _buffer, size_t buf_len, bool has_data = true);
-		//With this constructor, CBOR Object must contain a cbor Pair
-		//Same as above: the size of the length field cannot be expanded.
+
+		//! Construct a CBOR PAIR from a CBOR object.
+		/*!
+		 * Behaviour when obj does not contain a CBOR PAIR is undefined.
+		 * Note that this is not a copy constructor. This object and `obj` share
+		 * the same buffer for storing information.
+		 *
+		 * New elements can be added.
+		 * However, the size of the length field cannot be expanded
+		 * (expect less than 2^NUM_ELE_PROVISION-1 elements capacity).
+		 *
+		 * \param obj A CBOR object containing a CBOR PAIR.
+		 */
 		CBORPair(const CBOR &obj);
 
+		//! Appends an element to the end of this CBOR PAIR.
+		/*!
+		 * \param key The key of the element to append to this CBOR PAIR.
+		 * \param value The value element to append to this CBOR PAIR.
+		 * \return True if the operation was successful, false otherwise.
+		 */
 		template <typename T, typename U> bool append(T key, U value)
 		{
 			bool ret_val = true;
@@ -31,6 +85,16 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 			return ret_val;
 		}
 
+		//! Returns the CBOR value associated with a particular key.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the value at key `key`.
+		 *
+		 * \param key The key of the CBOR value to be retrieved.
+		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
+		 * found or if this object does not actually stores a CBOR PAIR in its
+		 * buffer.
+		 */
 		template <typename T> CBOR operator[](T key)
 		{
 			if (!is_pair()) {
@@ -61,7 +125,26 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 			return CBOR();
 		}
 
+		//! Returns the CBOR value located at an index.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the value at index `idx`.
+		 *
+		 * \param idx The index of the CBOR value to be retrieved.
+		 * \return The retrieved object, or a CBOR NULL if `idx` is out of range
+		 * or if this object does not actually stores a CBOR PAIR in its buffer.
+		 */
 		CBOR at(size_t idx);
+
+		//! Returns the CBOR key located at an index.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the key at index `idx`.
+		 *
+		 * \param idx The index of the CBOR key to be retrieved.
+		 * \return The retrieved object, or a CBOR NULL if `idx` is out of range
+		 * or if this object does not actually stores a CBOR PAIR in its buffer.
+		 */
 		CBOR key_at(size_t idx);
 };
 
