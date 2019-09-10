@@ -57,7 +57,7 @@ bool test_array()
 	CBORArray cbor = CBORArray();
 
 	good_alloc &= cbor.append(1);
-	good_alloc &= cbor.append(3.16);
+	good_alloc &= cbor.append((float)3.16);
 	good_alloc &= cbor.append("test");
 
 	if (!good_alloc) {

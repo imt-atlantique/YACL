@@ -54,6 +54,13 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 		 */
 		CBORPair(uint8_t* _buffer, size_t buf_len, bool has_data = true);
 
+		//! Parse and create a CBOR pair from a byte array of CBOR data (a copy is performed).
+		/*!
+		 * \param buffer Pointer to the beginning of the array.
+		 * \param buffer_len Size (in bytes) of the array.
+		 */
+		CBORPair(const uint8_t* _buffer, size_t buf_len);
+
 		//! Construct a CBOR PAIR from a CBOR object.
 		/*!
 		 * Behaviour when obj does not contain a CBOR PAIR is undefined.
@@ -66,7 +73,7 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 		 *
 		 * \param obj A CBOR object containing a CBOR PAIR.
 		 */
-		CBORPair(const CBOR &obj);
+		CBORPair(CBOR &obj);
 
 		//! Appends an element to the end of this CBOR PAIR.
 		/*!
@@ -108,7 +115,7 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 			}
 
 			CBOR idx_cbor = CBOR(key);
-			uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
+			const uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
 			size_t idx_cbor_size = idx_cbor.length();
 			uint8_t *ele_begin = buffer_data_begin;
 

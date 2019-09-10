@@ -7,7 +7,7 @@ bool CBORPair::buffer_equals(const uint8_t* buf1, size_t len_buf1,
 		return false;
 	}
 
-	uint8_t *_buf1 = buf1, *_buf2 = buf2;
+	const uint8_t *_buf1 = buf1, *_buf2 = buf2;
 
 	while (_buf1 != (buf1 + len_buf1)) {
 		if (*_buf1 != *_buf2) {
@@ -33,8 +33,8 @@ CBORPair::CBORPair(uint8_t* _buffer, size_t buffer_len, bool has_data)
 		//Jump to the end of the data chunk
 		w_ptr = buffer_data_begin;
 		for (size_t i=0 ;  i < n_elements() ; ++i) {
-			w_ptr = element_size(w_ptr);
-			w_ptr = element_size(w_ptr);
+			w_ptr += element_size(w_ptr);
+			w_ptr += element_size(w_ptr);
 		}
 	}
 	else {
@@ -49,22 +49,38 @@ CBORPair::CBORPair(uint8_t* _buffer, size_t buffer_len, bool has_data)
 	}
 }
 
-CBORPair::CBORPair(const CBOR &obj)
+CBORPair::CBORPair(const uint8_t* _buffer, size_t buf_len)
+{
+	size_t _num_ele = decode_abs_num(_buffer);
+
+	//Init buffer
+	max_buf_len = buf_len + NUM_ELE_PROVISION;
+	init_buffer();
+
+	//Initialize number of elements, and copy data
+	init_num_ele(_num_ele);
+	memcpy(w_ptr, _buffer + compute_type_num_len(_num_ele),
+			buf_len - compute_type_num_len(_num_ele));
+
+	//Jump to the end of the data chunk
+	for (size_t i=0 ;  i < n_elements() ; ++i) {
+		w_ptr += element_size(w_ptr);
+		w_ptr += element_size(w_ptr);
+	}
+}
+
+CBORPair::CBORPair(CBOR &obj)
 {
 	max_buf_len = obj.length();
 	buffer_type = BUFFER_EXTERNAL;
 
-	ext_buffer_begin = obj.to_CBOR();
+	ext_buffer_begin = obj.get_buffer();
 	buffer_begin = ext_buffer_begin;
 
 	buffer_data_begin = buffer_begin + compute_type_num_len(n_elements());
 
 	//Jump to the end of the data chunk
-	w_ptr = buffer_data_begin;
-	for (size_t i=0 ;  i < n_elements() ; ++i) {
-		w_ptr += element_size(w_ptr);
-		w_ptr += element_size(w_ptr);
-	}
+	w_ptr = buffer_begin + obj.length();
 }
 
 CBOR CBORPair::at(size_t idx)

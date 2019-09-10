@@ -209,7 +209,7 @@ bool test_negfloat()
 {
 	const uint8_t expected[5] = {0xfa, 0xbf, 0xc0, 0x00, 0x00};
 	size_t len_expected = 5;
-	CBOR cbor = CBOR(-1.5);
+	CBOR cbor = CBOR((float)-1.5);
 
 	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
 		return true;
@@ -222,7 +222,7 @@ bool test_float()
 {
 	const uint8_t expected[5] = {0xfa, 0x3f, 0xc0, 0x00, 0x00};
 	size_t len_expected = 5;
-	CBOR cbor = CBOR(1.5);
+	CBOR cbor = CBOR((float)1.5);
 
 	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
 		return true;
@@ -300,7 +300,7 @@ bool test_array1()
 {
 	const uint8_t expected = 0x80;
 	size_t len_expected = 1;
-	const uint8_t cbor_buffer[10];
+	uint8_t cbor_buffer[10];
 	CBORArray cbor = CBORArray(cbor_buffer, 10, false);
 
 	if (buffer_equals(&expected, len_expected, cbor.to_CBOR(), cbor.length())) {
@@ -315,7 +315,7 @@ bool test_array2()
 	const uint8_t expected[4] = {0x83, 0x01, 0x02, 0x03};
 	size_t len_expected = 4;
 	uint8_t data[3] = {1, 2, 3};
-	const uint8_t cbor_buffer[13];
+	uint8_t cbor_buffer[13];
 	CBORArray cbor = CBORArray(cbor_buffer, 13, false);
 	cbor.append(data, 3);
 
@@ -330,10 +330,10 @@ bool test_array3()
 {
 	const uint8_t expected[] = {0x83, 0x01, 0xFA, 0x40, 0x4A, 0x3D, 0x71, 0x64, 0x74, 0x65, 0x73, 0x74};
 	size_t len_expected = 12;
-	const uint8_t cbor_buffer[20];
+	uint8_t cbor_buffer[20];
 	CBORArray cbor = CBORArray(cbor_buffer, 20, false);
 	cbor.append(CBOR(1));
-	cbor.append(3.16);
+	cbor.append((float)3.16);
 	cbor.append("test");
 
 	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
@@ -349,8 +349,8 @@ bool test_pair()
 								  0x2c, 0x33, 0x5d, 0x83, 0x01, 0x02, 0x03, 0x64, \
 								  0x4e, 0x75, 0x6c, 0x6c, 0xf6};
 	size_t len_expected = 21;
-	const uint8_t cbor_buffer[30];
-	const uint8_t arr_buffer[12];
+	uint8_t cbor_buffer[30];
+	uint8_t arr_buffer[12];
 	CBORPair cbor = CBORPair(cbor_buffer, 30, false);
 	CBORArray arr = CBORArray(arr_buffer, 12, false);
 

@@ -528,7 +528,7 @@ bool test_array3()
 	const uint8_t cbor_data[] = {0x83, 0x01, 0xFA, 0x40, 0x4A, 0x3D, 0x71, 0x64, 0x74, 0x65, 0x73, 0x74};
 	CBORArray cbor = CBORArray(cbor_data, 12);
 
-	if ((int)cbor[0] == 1 && (float)cbor[1] == 3.16 && cbor[2].to_string() == "test") {
+	if ((int)cbor[0] == 1 && (float)cbor[1] == (float)3.16 && cbor[2].to_string() == "test") {
 		return true;
 	}
 
@@ -542,7 +542,7 @@ bool test_array4()
 
 	if ((int)cbor[0] == 1) {
 		CBORArray tmp = CBORArray(cbor[1]);
-
+		
 		if((int)tmp[0] != 2 || (int)tmp[1] != 3) {
 			return false;
 		}

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <WString.h>
+#include <Arduino.h>
 
 #define CBOR_TYPE_MASK 0xE0
 #define CBOR_INFO_BITS 0x1F
@@ -80,6 +81,16 @@ class CBOR
 		uint8_t* get_buffer_begin() {
 			return (buffer_type == BUFFER_STATIC_INTERNAL)?static_buffer_begin:buffer_begin;
 		};
+
+		//! Returns const pointer on the begining of the buffer.
+		/*!
+		 * \return The right const pointer on the begining of the buffer,
+		 * depending on `buffer_type`.
+		 */
+		const uint8_t* get_const_buffer_begin() const {
+			return (buffer_type == BUFFER_STATIC_INTERNAL)?static_buffer_begin:buffer_begin;
+		};
+
 		//! Initialize a dynamically allocated internal buffer, with size `max_buf_len`.
 		/*!
 		 * \return true if allocation is successful, false otherwise.
@@ -306,6 +317,13 @@ class CBOR
 		 */
 		CBOR(uint8_t* buffer, size_t buffer_len, bool has_data = true);
 
+		//! Parse and create a CBOR object from a byte array of CBOR data (a copy is performed).
+		/*!
+		 * \param buffer Pointer to the beginning of the array.
+		 * \param buffer_len Size (in bytes) of the array.
+		 */
+		CBOR(const uint8_t* buffer, size_t buffer_len);
+
 		//! Copy constructor.
 		CBOR(const CBOR &obj);
 
@@ -332,14 +350,21 @@ class CBOR
 		/*
 		 * \return The length of this CBOR message.
 		 */
-		size_t length() const { return (size_t)(w_ptr - get_buffer_begin()); }
+		size_t length() const { return (size_t)(w_ptr - get_const_buffer_begin()); }
 
 		//! Returns this CBOR object as an array of bytes.
+		/*
+		 * \return This CBOR object as an array of bytes (const pointer to the
+		 * beginning of the buffer).
+		 */
+		const uint8_t* to_CBOR() const { return get_const_buffer_begin(); }
+
+		//! Returns this CBOR object as an array of bytes (alterable).
 		/*
 		 * \return This CBOR object as an array of bytes (pointer to the
 		 * beginning of the buffer).
 		 */
-		const uint8_t* to_CBOR() { return get_buffer_begin(); }
+		uint8_t* get_buffer() { return get_buffer_begin(); }
 
 		//! Return true if the CBOR object is a CBOR NULL.
 		/*
@@ -423,37 +448,37 @@ class CBOR
 		static bool is_pair(const uint8_t* buffer);
 
 		//! Return true if this CBOR object is a CBOR NULL.
-		bool is_null() const {return is_null(get_buffer_begin()); };
+		bool is_null() const {return is_null(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a CBOR BOOL.
-		bool is_bool() const {return is_bool(get_buffer_begin()); };
+		bool is_bool() const {return is_bool(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an uint8_t.
-		bool is_uint8() const {return is_uint8(get_buffer_begin()); };
+		bool is_uint8() const {return is_uint8(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an uint16_t.
-		bool is_uint16() const {return is_uint16(get_buffer_begin()); };
+		bool is_uint16() const {return is_uint16(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an uint32_t.
-		bool is_uint32() const {return is_uint32(get_buffer_begin()); };
+		bool is_uint32() const {return is_uint32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an uint64_t.
-		bool is_uint64() const {return is_uint64(get_buffer_begin()); };
+		bool is_uint64() const {return is_uint64(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int8_t.
-		bool is_int8() const {return is_int8(get_buffer_begin()); };
+		bool is_int8() const {return is_int8(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int16_t.
-		bool is_int16() const {return is_int16(get_buffer_begin()); };
+		bool is_int16() const {return is_int16(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int32_t.
-		bool is_int32() const {return is_int32(get_buffer_begin()); };
+		bool is_int32() const {return is_int32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int64_t.
-		bool is_int64() const {return is_int64(get_buffer_begin()); };
+		bool is_int64() const {return is_int64(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a CBOR FLOAT16.
-		bool is_float16() const {return is_float16(get_buffer_begin()); };
+		bool is_float16() const {return is_float16(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into 32-bit float.
-		bool is_float32() const {return is_float32(get_buffer_begin()); };
+		bool is_float32() const {return is_float32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into 64-bit float.
-		bool is_float64() const {return is_float64(get_buffer_begin()); };
+		bool is_float64() const {return is_float64(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a string.
-		bool is_string() const {return is_string(get_buffer_begin()); };
+		bool is_string() const {return is_string(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an array.
-		bool is_array() const {return is_array(get_buffer_begin()); };
+		bool is_array() const {return is_array(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a dictionnary of key/value pairs.
-		bool is_pair() const {return is_pair(get_buffer_begin()); };
+		bool is_pair() const {return is_pair(get_const_buffer_begin()); };
 
 		//! Convert this CBOR object to a boolean.
 		/*!

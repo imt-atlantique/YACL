@@ -100,6 +100,17 @@ CBOR::CBOR(uint8_t* buffer, size_t buffer_len, bool has_data)
 	buffer_type = BUFFER_EXTERNAL;
 }
 
+CBOR::CBOR(const uint8_t* buffer, size_t buffer_len)
+{
+	if (buffer_len > STATIC_ALLOC_SIZE) {
+		max_buf_len = buffer_len;
+		init_buffer();
+	}
+
+	memcpy(w_ptr, buffer, max_buf_len*sizeof(uint8_t));
+	w_ptr += element_size(w_ptr);
+}
+
 CBOR::CBOR(const CBOR &obj) {
 	const uint8_t* obj_buffer = obj.to_CBOR();
 
@@ -109,11 +120,13 @@ CBOR::CBOR(const CBOR &obj) {
 	}
 
 	memcpy(w_ptr, obj_buffer, max_buf_len*sizeof(uint8_t));
+	w_ptr += obj.length();
+
 }
 
 CBOR::~CBOR()
 {
-	if(buffer_type == BUFFER_DYNAMIC_INTERNAL) {
+	if((buffer_type == BUFFER_DYNAMIC_INTERNAL) && (buffer_begin != NULL)) {
 		free(buffer_begin);
 	}
 }
@@ -253,7 +266,7 @@ bool CBOR::encode_type_num(uint8_t cbor_type, uint64_t val)
 }
 
 bool CBOR::is_neg_num() const {
-	return ((get_buffer_begin()[0]&CBOR_7) == CBOR_NEGINT)?true:false;
+	return ((get_const_buffer_begin()[0]&CBOR_7) == CBOR_NEGINT)?true:false;
 }
 
 uint8_t CBOR::decode_abs_num8(const uint8_t *ptr) {
@@ -278,7 +291,7 @@ uint16_t CBOR::decode_abs_num16(const uint8_t *ptr) {
 uint32_t CBOR::decode_abs_num32(const uint8_t *ptr) {
 	uint32_t ret_val;
 	uint8_t* ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t* buf = &(ptr[4]);
+	const uint8_t* buf = &(ptr[4]);
 
 	*(ret_val_bytes++) = *(buf--);
 	*(ret_val_bytes++) = *(buf--);
@@ -291,7 +304,7 @@ uint32_t CBOR::decode_abs_num32(const uint8_t *ptr) {
 uint64_t CBOR::decode_abs_num64(const uint8_t *ptr) {
 	uint64_t ret_val;
 	uint8_t* ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t* buf = &(ptr[8]);
+	const uint8_t* buf = &(ptr[8]);
 
 	*(ret_val_bytes++) = *(buf--);
 	*(ret_val_bytes++) = *(buf--);
@@ -680,7 +693,6 @@ bool CBOR::add(const char* value)
 bool CBOR::add(const CBOR &value)
 {
 	size_t len_cbor = value.length();
-
 	if (!reserve(length() + len_cbor)) {
 		return false;
 	}
@@ -851,22 +863,22 @@ bool CBOR::is_pair(const uint8_t* buffer)
 
 CBOR::operator bool() const
 {
-	return (get_buffer_begin()[0] == CBOR_TRUE)?true:false;
+	return (get_const_buffer_begin()[0] == CBOR_TRUE)?true:false;
 }
 
 CBOR::operator uint8_t() const
 {
 
-	return (is_uint8())?decode_abs_num8(get_buffer_begin()):0;
+	return (is_uint8())?decode_abs_num8(get_const_buffer_begin()):0;
 }
 
 CBOR::operator uint16_t() const
 {
 	if (is_uint8()) {
-		return (uint16_t)decode_abs_num8(get_buffer_begin());
+		return (uint16_t)decode_abs_num8(get_const_buffer_begin());
 	}
 	if(is_uint16()) {
-		return decode_abs_num16(get_buffer_begin());
+		return decode_abs_num16(get_const_buffer_begin());
 	}
 
 	return 0;
@@ -875,13 +887,13 @@ CBOR::operator uint16_t() const
 CBOR::operator uint32_t() const
 {
 	if (is_uint8()) {
-		return (uint32_t)decode_abs_num8(get_buffer_begin());
+		return (uint32_t)decode_abs_num8(get_const_buffer_begin());
 	}
 	if(is_uint16()) {
-		return (uint32_t)decode_abs_num16(get_buffer_begin());
+		return (uint32_t)decode_abs_num16(get_const_buffer_begin());
 	}
 	if(is_uint32()) {
-		return decode_abs_num32(get_buffer_begin());
+		return decode_abs_num32(get_const_buffer_begin());
 	}
 
 	return 0;
@@ -890,16 +902,16 @@ CBOR::operator uint32_t() const
 CBOR::operator uint64_t() const
 {
 	if (is_uint8()) {
-		return (uint64_t)decode_abs_num8(get_buffer_begin());
+		return (uint64_t)decode_abs_num8(get_const_buffer_begin());
 	}
 	if(is_uint16()) {
-		return (uint64_t)decode_abs_num16(get_buffer_begin());
+		return (uint64_t)decode_abs_num16(get_const_buffer_begin());
 	}
 	if(is_uint32()) {
-		return (uint64_t)decode_abs_num32(get_buffer_begin());
+		return (uint64_t)decode_abs_num32(get_const_buffer_begin());
 	}
 	if(is_uint64()) {
-		return decode_abs_num64(get_buffer_begin());
+		return decode_abs_num64(get_const_buffer_begin());
 	}
 
 	return 0;
@@ -907,7 +919,7 @@ CBOR::operator uint64_t() const
 
 CBOR::operator int8_t() const
 {
-	uint8_t val_abs = decode_abs_num8(get_buffer_begin());
+	uint8_t val_abs = decode_abs_num8(get_const_buffer_begin());
 
 	if (is_int8()) {
 		if (is_neg_num()) {
@@ -927,7 +939,7 @@ CBOR::operator int16_t() const
 		return (int16_t)((int8_t)(*this));
 	}
 
-	uint16_t val_abs = decode_abs_num16(get_buffer_begin());
+	uint16_t val_abs = decode_abs_num16(get_const_buffer_begin());
 
 	if (is_int16()) {
 		if (is_neg_num()) {
@@ -950,7 +962,7 @@ CBOR::operator int32_t() const
 		return (int32_t)((int16_t)(*this));
 	}
 
-	uint32_t val_abs = decode_abs_num32(get_buffer_begin());
+	uint32_t val_abs = decode_abs_num32(get_const_buffer_begin());
 
 	if (is_int32()) {
 		if (is_neg_num()) {
@@ -976,7 +988,7 @@ CBOR::operator int64_t() const
 		return (int64_t)((int32_t)(*this));
 	}
 
-	uint64_t val_abs = decode_abs_num64(get_buffer_begin());
+	uint64_t val_abs = decode_abs_num64(get_const_buffer_begin());
 
 	if (is_int64()) {
 		if (is_neg_num()) {
@@ -994,10 +1006,10 @@ CBOR::operator float() const
 {
 	float ret_val = 0.0;
 	uint8_t *ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t *buf = NULL;
+	const uint8_t *buf = NULL;
 
 	if (is_float16()) {
-		buf = get_buffer_begin();
+		buf = get_const_buffer_begin();
 		uint8_t exp = (buf[1]>>2)&0x1f;
 		uint16_t mant = (buf[1]&0x03)<<8 | buf[2];
 
@@ -1017,7 +1029,7 @@ CBOR::operator float() const
 	}
 
 	if (is_float32()) {
-		buf = get_buffer_begin() + 4;
+		buf = get_const_buffer_begin() + 4;
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);
@@ -1038,13 +1050,13 @@ CBOR::operator double() const
 
 	double ret_val = 0.0;
 	uint8_t *ret_val_bytes = (uint8_t*)&ret_val;
-	uint8_t *buf = NULL;
+	const uint8_t *buf = NULL;
 
 	if (is_float64()) {
 		//On AVR arduino, double is the same as float...
 		//In this case, we convert from 64-bit float to 32-bit float
 		if(sizeof(double) == 4) {
-			buf = get_buffer_begin();
+			buf = get_const_buffer_begin();
 			int32_t exp = ((buf[1]&0x7F)<<4)|((buf[2]&0xF0)>>4);
 			uint32_t mant = ((uint32_t)(buf[2]&0x0F)<<19) \
 							| ((uint32_t)(buf[3])<<11) \
@@ -1073,7 +1085,7 @@ CBOR::operator double() const
 			return (buf[1]&0x80) ? -ret_val : ret_val;
 		}
 
-		buf = get_buffer_begin() + 8;
+		buf = get_const_buffer_begin() + 8;
 
 		*(ret_val_bytes++) = *(buf--);
 		*(ret_val_bytes++) = *(buf--);
@@ -1092,14 +1104,14 @@ CBOR::operator double() const
 
 size_t CBOR::get_string_len() const
 {
-	return decode_abs_num(get_buffer_begin());
+	return decode_abs_num(get_const_buffer_begin());
 }
 
 void CBOR::get_string(char* str) const
 {
 	size_t len_str = get_string_len();
 
-	memcpy(str, get_buffer_begin()+1, len_str*sizeof(uint8_t));
+	memcpy(str, get_const_buffer_begin()+1, len_str*sizeof(uint8_t));
 	str[len_str] = '\0';
 }
 
@@ -1110,7 +1122,7 @@ void CBOR::get_string(String& str) const
 	str.reserve(length() + len_str);
 
 	str = "";
-	for (uint8_t* i=get_buffer_begin()+1 ; i < (get_buffer_begin()+1+len_str) ; ++i) {
+	for (const uint8_t* i=get_const_buffer_begin()+1 ; i < (get_const_buffer_begin()+1+len_str) ; ++i) {
 		str += (char)(*i);
 	}
 }

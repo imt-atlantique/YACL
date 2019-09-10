@@ -40,6 +40,13 @@ class CBORArray: public CBORComposed<CBOR_ARRAY>
 		 */
 		CBORArray(uint8_t* _buffer, size_t buf_len, bool has_data = true);
 
+		//! Parse and create a CBOR array from a byte array of CBOR data (a copy is performed).
+		/*!
+		 * \param buffer Pointer to the beginning of the array.
+		 * \param buffer_len Size (in bytes) of the array.
+		 */
+		CBORArray(const uint8_t* _buffer, size_t buf_len);
+
 		//! Construct a CBOR array from a CBOR object.
 		/*!
 		 * Behaviour when obj does not contain a CBOR array is undefined.
@@ -52,7 +59,7 @@ class CBORArray: public CBORComposed<CBOR_ARRAY>
 		 *
 		 * \param obj A CBOR object containing a CBOR ARRAY.
 		 */
-		CBORArray(const CBOR &obj);
+		CBORArray(CBOR &obj);
 
 		//! Appends CBOR NULL to the end of this CBOR ARRAY.
 		/*!
@@ -83,7 +90,7 @@ class CBORArray: public CBORComposed<CBOR_ARRAY>
 			bool ret_val = true;
 
 			init_num_ele(n_elements() + size);
-			for (T *ptr = array ; ptr < (array+size) ; ++ptr) {
+			for (const T *ptr = array ; ptr < (array+size) ; ++ptr) {
 				ret_val &= add(*ptr);
 			}
 

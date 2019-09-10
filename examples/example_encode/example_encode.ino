@@ -39,7 +39,7 @@ void setup()
 
 	// That's it! Let's see how our data looks.
 	Serial.println("CBOR Encoded data:");
-	uint8_t *cbor_encoded = data.to_CBOR();
+	const uint8_t *cbor_encoded = data.to_CBOR();
 	for (size_t i=0 ; i < data.length() ; ++i) {
 		Serial.print(cbor_encoded[i], HEX);
 	}

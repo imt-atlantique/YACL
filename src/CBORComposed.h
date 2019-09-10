@@ -68,7 +68,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 
 		/*!
 		 * Initialize a dynamically allocated internal buffer, with size
-		 * `max_buf_len + NUM_ELE_PROVISION`.
+		 * `max_buf_len`.
 		 * It will also place `ext_buffer_begin`, `buffer_data_begin` and
 		 * `buffer_begin` to the right positions.
 		 *
@@ -110,14 +110,14 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 
 		//! Construct a composed CBOR object with a custom length DYNAMIC_INTERNAL buffer.
 		/*!
-		 * The total length of the alocated buffer is `buf_len - 1 + NUM_ELE_PROVISION`.
+		 * The total length of the alocated buffer is `buf_len + NUM_ELE_PROVISION`.
 		 *
 		 * \param buf_len Buffer size, in bytes, of the data section of the buffer.
 		 */
 		CBORComposed(size_t buf_len)
 		{
 			//Reserve buffer
-			max_buf_len = buf_len - 1 + NUM_ELE_PROVISION;
+			max_buf_len = buf_len + NUM_ELE_PROVISION;
 			init_buffer();
 
 			//Initialize num_ele
@@ -132,15 +132,18 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 			//table length up to (2^64)-1
 			size_t buf_len_needed = obj.length() - type_num_len + NUM_ELE_PROVISION;
 
+			//Reserve buffer
 			max_buf_len = buf_len_needed;
 			init_buffer();
 
-			//Reserve begining of buffer to store table length
-			buffer_begin = ext_buffer_begin + NUM_ELE_PROVISION - type_num_len;
-			w_ptr = buffer_begin + obj.length();
+			//Initialize num_ele
+			init_num_ele(obj.n_elements());
 
-			//Copy num_ele and data
-			memcpy(buffer_begin, obj.to_CBOR(), obj.length());
+			//Copy data
+			memcpy(buffer_data_begin, obj.to_CBOR() + type_num_len, obj.length() - type_num_len);
+
+			//Jump to the end of the data chunk
+			w_ptr = buffer_begin + obj.length();
 		}
 
 	public:
@@ -149,6 +152,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 		{
 			if(buffer_type == BUFFER_DYNAMIC_INTERNAL) {
 				free(ext_buffer_begin);
+				buffer_begin = NULL;
 			}
 		}
 
@@ -197,7 +201,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 		/*!
 		 * \return The number of elements in this composed CBOR object.
 		 */
-		size_t n_elements() const { return decode_abs_num(get_buffer_begin()); }
+		size_t n_elements() const { return decode_abs_num(get_const_buffer_begin()); }
 
 		//! Get the maximum number of elements that can fit in this composed CBOR object.
 		/*!
