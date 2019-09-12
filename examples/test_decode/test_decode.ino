@@ -511,7 +511,7 @@ bool test_string_string2()
 bool test_array2()
 {
 	const uint8_t cbor_data[] = {0x83, 0x01, 0x02, 0x03};
-	CBORArray cbor = CBORArray(cbor_data, 4);
+	CBOR cbor = CBOR(cbor_data, 4);
 	int tab[] = {1, 2, 3};
 
 	for (size_t i=0 ; i < cbor.n_elements() ; ++i) {
@@ -526,7 +526,7 @@ bool test_array2()
 bool test_array3()
 {
 	const uint8_t cbor_data[] = {0x83, 0x01, 0xFA, 0x40, 0x4A, 0x3D, 0x71, 0x64, 0x74, 0x65, 0x73, 0x74};
-	CBORArray cbor = CBORArray(cbor_data, 12);
+	CBOR cbor = CBOR(cbor_data, 12);
 
 	if ((int)cbor[0] == 1 && (float)cbor[1] == (float)3.16 && cbor[2].to_string() == "test") {
 		return true;
@@ -538,17 +538,14 @@ bool test_array3()
 bool test_array4()
 {
 	const uint8_t cbor_data[] = {0x83, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05};
-	CBORArray cbor = CBORArray(cbor_data, 8);
+	CBOR cbor = CBOR(cbor_data, 8);
 
 	if ((int)cbor[0] == 1) {
-		CBORArray tmp = CBORArray(cbor[1]);
-		
-		if((int)tmp[0] != 2 || (int)tmp[1] != 3) {
+		if((int)cbor[1][0] != 2 || (int)cbor[1][1] != 3) {
 			return false;
 		}
 
-		tmp = CBORArray(cbor[2]);
-		if((int)tmp[0] != 4 || (int)tmp[1] != 5) {
+		if((int)cbor[2][0] != 4 || (int)cbor[2][1] != 5) {
 			return false;
 		}
 
@@ -564,7 +561,7 @@ bool test_array5()
 								0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, \
 								0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, \
 								0x17, 0x18, 0x18, 0x18, 0x19};
-	CBORArray cbor = CBORArray(cbor_data, 29);
+	CBOR cbor = CBOR(cbor_data, 29);
 
 	for (int i=0 ; i < 25 ; ++i) {
 		if ((int)cbor[i] != (i+1)) {
@@ -578,7 +575,7 @@ bool test_array5()
 bool test_pair()
 {
 	const uint8_t cbor_data[] = {0xa2, 0x01, 0x02, 0x03, 0x04};
-	CBORPair cbor = CBORPair(cbor_data, 14);
+	CBOR cbor = CBOR(cbor_data, 14);
 
 	if ((int)cbor[1] == 2 && (int)cbor[3] == 4) {
 		return true;
@@ -590,11 +587,10 @@ bool test_pair()
 bool test_pair1()
 {
 	const uint8_t cbor_data[] = {0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03};
-	CBORPair cbor = CBORPair(cbor_data, 18);
+	CBOR cbor = CBOR(cbor_data, 18);
 
 	if ((int)cbor["a"] == 1) {
-		CBORArray tmp = CBORArray(cbor["b"]);
- 		if((int)tmp[0] == 2 && (int)tmp[1] == 3) {
+ 		if((int)cbor["b"][0] == 2 && (int)cbor["b"][1] == 3) {
 			return true;
 		}
 	}
@@ -607,7 +603,7 @@ bool test_pair2()
 	const uint8_t cbor_data[] = {0xa5, 0x61, 0x61, 0x61, 0x41, 0x61, 0x62, 0x61, \
 								0x42, 0x61, 0x63, 0x61, 0x43, 0x61, 0x64, 0x61, \
 								0x44, 0x61, 0x65, 0x61, 0x45};
-	CBORPair cbor = CBORPair(cbor_data, 30);
+	CBOR cbor = CBOR(cbor_data, 30);
 
 	if (cbor["a"].to_string() == "A" && cbor["b"].to_string() == "B" \
 		&& cbor["c"].to_string() == "C" && cbor["d"].to_string() == "D" \

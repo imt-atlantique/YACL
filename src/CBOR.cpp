@@ -13,66 +13,7 @@ bool CBOR::init_buffer()
 	return true;
 }
 
-CBOR::CBOR()
-{
-	add();
-}
-
-CBOR::CBOR(bool value)
-{
-	add(value);
-}
-
-CBOR::CBOR(uint8_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(uint16_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(uint32_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(uint64_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(int8_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(int16_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(int32_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(int64_t value)
-{
-	add(value);
-}
-
-CBOR::CBOR(float value)
-{
-	add(value);
-}
-
-CBOR::CBOR(double value)
-{
-	add(value);
-}
-
+//Specialization for C-style String
 CBOR::CBOR(const char* value)
 {
 	size_t str_buf_len = strlen(value) + 1;
@@ -83,6 +24,135 @@ CBOR::CBOR(const char* value)
 	}
 
 	add(value);
+}
+
+//Specialization for common types
+CBOR::CBOR(char value)
+{
+	if (sizeof(char) == 1) {
+		add((int8_t)value);
+	}
+	else if (sizeof(char) == 2) {
+		add((int16_t)value);
+	}
+	else if (sizeof(char) == 3) {
+		add((int32_t)value);
+	}
+	else if (sizeof(char) == 4) {
+		add((int64_t)value);
+	}
+}
+
+CBOR::CBOR(short value)
+{
+	if (sizeof(short) == 1) {
+		add((int8_t)value);
+	}
+	else if (sizeof(short) == 2) {
+		add((int16_t)value);
+	}
+	else if (sizeof(short) == 3) {
+		add((int32_t)value);
+	}
+	else if (sizeof(short) == 4) {
+		add((int64_t)value);
+	}
+}
+
+CBOR::CBOR(int value)
+{
+	if (sizeof(int) == 1) {
+		add((int8_t)value);
+	}
+	else if (sizeof(int) == 2) {
+		add((int16_t)value);
+	}
+	else if (sizeof(int) == 3) {
+		add((int32_t)value);
+	}
+	else if (sizeof(int) == 4) {
+		add((int64_t)value);
+	}
+}
+
+CBOR::CBOR(long value)
+{
+	if (sizeof(long) == 1) {
+		add((int8_t)value);
+	}
+	else if (sizeof(long) == 2) {
+		add((int16_t)value);
+	}
+	else if (sizeof(long) == 3) {
+		add((int32_t)value);
+	}
+	else if (sizeof(long) == 4) {
+		add((int64_t)value);
+	}
+}
+
+CBOR::CBOR(unsigned char value)
+{
+	if (sizeof(unsigned char) == 1) {
+		add((uint8_t)value);
+	}
+	else if (sizeof(unsigned char) == 2) {
+		add((uint16_t)value);
+	}
+	else if (sizeof(unsigned char) == 3) {
+		add((uint32_t)value);
+	}
+	else if (sizeof(unsigned char) == 4) {
+		add((uint64_t)value);
+	}
+}
+
+CBOR::CBOR(unsigned short value)
+{
+	if (sizeof(unsigned short) == 1) {
+		add((uint8_t)value);
+	}
+	else if (sizeof(unsigned short) == 2) {
+		add((uint16_t)value);
+	}
+	else if (sizeof(unsigned short) == 3) {
+		add((uint32_t)value);
+	}
+	else if (sizeof(unsigned short) == 4) {
+		add((uint64_t)value);
+	}
+}
+
+CBOR::CBOR(unsigned int value)
+{
+	if (sizeof(unsigned int) == 1) {
+		add((uint8_t)value);
+	}
+	else if (sizeof(unsigned int) == 2) {
+		add((uint16_t)value);
+	}
+	else if (sizeof(unsigned int) == 3) {
+		add((uint32_t)value);
+	}
+	else if (sizeof(unsigned int) == 4) {
+		add((uint64_t)value);
+	}
+}
+
+CBOR::CBOR(unsigned long value)
+{
+	if (sizeof(unsigned long) == 1) {
+		add((uint8_t)value);
+	}
+	else if (sizeof(unsigned long) == 2) {
+		add((uint16_t)value);
+	}
+	else if (sizeof(unsigned long) == 3) {
+		add((uint32_t)value);
+	}
+	else if (sizeof(unsigned long) == 4) {
+		add((uint64_t)value);
+	}
 }
 
 CBOR::CBOR(uint8_t* buffer, size_t buffer_len, bool has_data)
@@ -537,6 +607,26 @@ size_t CBOR::element_size(uint8_t *ptr)
 	}
 
 	return (ptr - type);
+}
+
+bool CBOR::buffer_equals(const uint8_t* buf1, size_t len_buf1,
+		const uint8_t* buf2, size_t len_buf2)
+{
+	if (len_buf1 != len_buf2) {
+		return false;
+	}
+
+	const uint8_t *_buf1 = buf1, *_buf2 = buf2;
+
+	while (_buf1 != (buf1 + len_buf1)) {
+		if (*_buf1 != *_buf2) {
+			return false;
+		}
+		++_buf1;
+		++_buf2;
+	}
+
+	return true;
 }
 
 bool CBOR::add()
@@ -1136,3 +1226,12 @@ String CBOR::to_string() const
 	return str;
 }
 
+size_t CBOR::n_elements() const
+{
+	if (is_array() || is_pair()) {
+		return decode_abs_num(get_const_buffer_begin());
+	}
+	else {
+		return 0;
+	}
+}

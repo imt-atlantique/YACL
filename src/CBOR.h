@@ -159,6 +159,19 @@ class CBOR
 		 */
 		static size_t element_size(uint8_t *ptr);
 
+		//! Check if two buffers store the same information.
+		/*!
+		 * Check that the two buffers have same length, and that they store
+		 * the same information.
+		 *
+		 * \param buf1 First buffer.
+		 * \param len_buf1 Number of elements in first buffer.
+		 * \param buf2 Second buffer.
+		 * \param len_buf2 Number of elements in second buffer.
+		 */
+		static bool buffer_equals(const uint8_t* buf1, size_t len_buf1,
+				const uint8_t* buf2, size_t len_buf2);
+
 		//! Add a CBOR NULL at the end of the buffer.
 		bool add();
 		//! Add a CBOR BOOL at the end of the buffer.
@@ -243,70 +256,50 @@ class CBOR
 		 * \return False if anything goes wrong. True otherwise.
 		 */
 		bool add(const CBOR &value);
+
+		/*!
+		 * Helper function for operator[]: when index is a non-float numeric,
+		 * then operator[] can call at() for a CBOR ARRAY, or find_by_key() for
+		 * a CBOR PAIR.
+		 * However, when index is not numeric of float, then this CBOR object
+		 * can only be a CBOR PAIR, and only find_by_key() should be called.
+		 */
+		template <typename T> CBOR access_op_numeric(T idx)
+		{
+			if (is_array()) {
+				return at(idx);
+			}
+
+			if (is_pair()) {
+				return find_by_key(idx);
+			}
+
+			//Not a CBOR PAIR nor a CBOR ARRAY
+			return CBOR();
+		}
 	public:
 		//Constructors for primitive types
 		//! Construct a stack-allocated NULL CBOR object.
-		CBOR();
-		//! Construct a stack-allocated Boolean CBOR object.
+		CBOR() { add(); };
+
+		//! Construct a stack-allocated CBOR object.
 		/*!
-		 * \param value The boolean value to encode.
+		 * \param value The value to encode.
 		 */
-		CBOR(bool value);
-		//! Construct a stack-allocated CBOR UINT8 object.
-		/*!
-		 * \param value The 8-bit positive integer to encode.
-		 */
-		CBOR(uint8_t value);
-		//! Construct a stack-allocated CBOR UINT16 object.
-		/*!
-		 * \param value The 16-bit positive integer to encode.
-		 */
-		CBOR(uint16_t value);
-		//! Construct a stack-allocated CBOR UINT32 object.
-		/*!
-		 * \param value The 32-bit positive integer to encode.
-		 */
-		CBOR(uint32_t value);
-		//! Construct a stack-allocated CBOR UINT64 object.
-		/*!
-		 * \param value The 64-bit positive integer to encode.
-		 */
-		CBOR(uint64_t value);
-		//! Construct a stack-allocated CBOR INT8 object.
-		/*!
-		 * \param value The 8-bit integer to encode.
-		 */
-		CBOR(int8_t value);
-		//! Construct a stack-allocated CBOR INT16 object.
-		/*!
-		 * \param value The 16-bit integer to encode.
-		 */
-		CBOR(int16_t value);
-		//! Construct a stack-allocated CBOR INT32 object.
-		/*!
-		 * \param value The 32-bit integer to encode.
-		 */
-		CBOR(int32_t value);
-		//! Construct a stack-allocated CBOR INT64 object.
-		/*!
-		 * \param value The 64-bit integer to encode.
-		 */
-		CBOR(int64_t value);
-		//! Construct a stack-allocated CBOR FLOAT32 object.
-		/*!
-		 * \param value The 32-bit floating point number to encode.
-		 */
-		CBOR(float value);
-		//! Construct a stack-allocated CBOR FLOAT64 object.
-		/*!
-		 * \param value The 64-bit floating point number to encode.
-		 */
-		CBOR(double value);
-		//! Construct a stack-allocated CBOR TEXT object.
-		/*!
-		 * \param value The string to be added to this CBOR object.
-		 */
+		template <typename T> CBOR(T value) { add(value); };
+
+		//Specialization for C-style String
 		CBOR(const char* value);
+
+		//Specialization for common types
+		CBOR(char value);
+		CBOR(short value);
+		CBOR(int value);
+		CBOR(long value);
+		CBOR(unsigned char value);
+		CBOR(unsigned short value);
+		CBOR(unsigned int value);
+		CBOR(unsigned long value);
 
 		//! Construct a CBOR object using an external buffer.
 		/*!
@@ -573,6 +566,162 @@ class CBOR
 		 * \returns this CBOR string as an Arduino String object.
 		 */
 		String to_string() const;
-};
 
+		//! Get the number of elements in this composed CBOR object.
+		/*!
+		 * \return The number of elements in this composed CBOR object.
+		 */
+		size_t n_elements() const;
+
+		//! Returns the CBOR value located at an index. Use for CBOR ARRAY and CBOR PAIR.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the value at index `idx`.
+		 * Behaviour is undefined if `idx` is non-numeric.
+		 *
+		 * \param idx The index of the CBOR value to be retrieved.
+		 * \return The retrieved object, or a CBOR NULL if `idx` is negative,
+		 * out of range or if this object does not actually stores a CBOR PAIR
+		 * or a CBOR ARRAY in its buffer.
+		 */
+		template <typename T> CBOR at(T idx)
+		{
+			size_t n_elements = decode_abs_num(get_const_buffer_begin());
+			uint8_t *ele_begin = get_buffer_begin() + compute_type_num_len(n_elements);
+
+			if ((!is_pair() && !is_array()) || (idx > n_elements) || (idx < 0)) {
+				return CBOR();
+			}
+
+			//Jump to the reffered value
+			if (is_pair()) {
+				ele_begin += element_size(ele_begin);
+				for (T i=0 ; i < idx ; ++i) {
+					ele_begin += element_size(ele_begin);
+					ele_begin += element_size(ele_begin);
+				}
+			}
+			else { //is_array()
+				for (T i=0 ; i < idx ; ++i) {
+					ele_begin += element_size(ele_begin);
+				}
+			}
+
+			return CBOR(ele_begin, element_size(ele_begin), true);
+		}
+
+		//! Returns the CBOR key located at an index. Use for CBOR PAIR.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the key at index `idx`.
+		 * Behaviour is undefined if `idx` is non-numeric.
+		 *
+		 * \param idx The index of the CBOR key to be retrieved.
+		 * \return The retrieved object, or a CBOR NULL if `idx` is negative,
+		 * out of range or if this object does not actually stores a CBOR PAIR
+		 * in its buffer.
+		 */
+		template <typename T> CBOR key_at(T idx)
+		{
+			size_t n_elements = decode_abs_num(get_const_buffer_begin());
+			uint8_t *ele_begin = get_buffer_begin() + compute_type_num_len(n_elements);
+
+			if (!is_pair() || (idx > n_elements) || (idx < 0)) {
+				return CBOR();
+			}
+
+			//Jump to the reffered key
+			for (T i=0 ; i < idx ; ++i) {
+				ele_begin += element_size(ele_begin);
+				ele_begin += element_size(ele_begin);
+			}
+
+			return CBOR(ele_begin, element_size(ele_begin), true);
+		}
+
+		//! Returns the CBOR value located at a key. Use for CBOR PAIR.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the value at key `key`.
+		 * Note that, as there is sometimes different CBOR representation of
+		 * a single value (e.g.: 4 can be coded with (u)int{8,16,32,64}), it may
+		 * be required to construct a CBOR object and pass it as the key.
+		 * If the CBOR PAIR object has two values associated with the same key,
+		 * this operator will return the first one in order of appearence in the
+		 * data buffer.
+		 *
+		 * \param key The key of the CBOR value to be retrieved.
+		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
+		 * found or if this object does not actually stores a CBOR PAIR.
+		 */
+		template <typename T> CBOR find_by_key(T key)
+		{
+			if (!is_pair()) {
+				return CBOR();
+			}
+
+			size_t n_elements = decode_abs_num(get_const_buffer_begin());
+			uint8_t *ele_begin = get_buffer_begin() + compute_type_num_len(n_elements);
+
+			CBOR idx_cbor = CBOR(key);
+			const uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
+			size_t idx_cbor_size = idx_cbor.length();
+
+			//Search key until the end of the Pair (map) is found
+			for (size_t i=0 ; i < n_elements ; ++i) {
+				//If key match
+				if (buffer_equals(idx_cbor_buffer, idx_cbor_size,
+							ele_begin, element_size(ele_begin))) {
+
+					ele_begin += element_size(ele_begin);
+
+					return CBOR(ele_begin, element_size(ele_begin), true);
+				}
+				else {
+					//Key don't match, jump to next key
+					ele_begin += element_size(ele_begin);
+					ele_begin += element_size(ele_begin);
+				}
+			}
+
+			//Not found
+			return CBOR();
+		}
+
+		//! Returns the CBOR value associated with a particular key or index.
+		/*!
+		 * This operator does not perform any copy.
+		 * However, it cannot be used to modify the value at key/index `key`.
+		 *
+		 * For a CBOR ARRAY, behaviour is undefined if `key` is non-numeric.
+		 *
+		 * \param key The key (CBOR PAIR) or index (CBOR ARRAY) of the CBOR value to be retrieved.
+		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
+		 * found, if this object does not actually stores a CBOR PAIR or a
+		 * CBOR ARRAY in its buffer. In case this object is a CBOR ARRAY, a CBOR
+		 * NULL is also returned if `key` is negative or out of range.
+		 */
+		template <typename T> CBOR operator[](T key)
+		{
+			//Defaut implementation for non-numeric types
+			if (is_pair()) {
+				return find_by_key(key);
+			}
+
+			//Not a CBOR PAIR nor a CBOR ARRAY
+			return CBOR();
+		}
+
+		//Specialization of operator [] for numeric types
+		CBOR operator[](char key)	{ return access_op_numeric(key); };
+		CBOR operator[](short key)	{ return access_op_numeric(key); };
+		CBOR operator[](int key)	{ return access_op_numeric(key); };
+		CBOR operator[](long key)	{ return access_op_numeric(key); };
+		CBOR operator[](long long key)	{ return access_op_numeric(key); };
+		CBOR operator[](unsigned char key)	{ return access_op_numeric(key); };
+		CBOR operator[](unsigned short key)	{ return access_op_numeric(key); };
+		CBOR operator[](unsigned int key)	{ return access_op_numeric(key); };
+		CBOR operator[](unsigned long key)	{ return access_op_numeric(key); };
+		CBOR operator[](unsigned long long key)	{ return access_op_numeric(key); };
+};
 #endif

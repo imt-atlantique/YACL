@@ -33,8 +33,8 @@ void setup()
 
 		return;
 	}
-	// Import dictionary into a CBORPair
-	CBORPair data = CBORPair(cbor_data, 41, true);
+	// Import dictionary into a CBOR object
+	CBOR data = CBOR(cbor_data, 41, true);
 
 	Serial.println("{");
 
@@ -65,7 +65,7 @@ void setup()
 		return;
 	}
 
-	CBORArray array = CBORArray(data["temperatures"]);
+	CBOR array = data["temperatures"];
 	Serial.print("\t \"temperatures\": [");
 	for (size_t i=0 ; i < array.n_elements() ; ++i) {
 		//Check that the value fit in an int (32 bits integer)

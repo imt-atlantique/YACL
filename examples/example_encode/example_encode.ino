@@ -41,6 +41,9 @@ void setup()
 	Serial.println("CBOR Encoded data:");
 	const uint8_t *cbor_encoded = data.to_CBOR();
 	for (size_t i=0 ; i < data.length() ; ++i) {
+		if (cbor_encoded[i] < 0x10) {
+			Serial.print('0');
+		}
 		Serial.print(cbor_encoded[i], HEX);
 	}
 	Serial.println("\n You can check this encoding using http://cbor.me");

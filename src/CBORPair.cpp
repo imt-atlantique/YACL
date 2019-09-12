@@ -1,24 +1,5 @@
 #include "CBORPair.h"
 
-bool CBORPair::buffer_equals(const uint8_t* buf1, size_t len_buf1,
-		const uint8_t* buf2, size_t len_buf2)
-{
-	if (len_buf1 != len_buf2) {
-		return false;
-	}
-
-	const uint8_t *_buf1 = buf1, *_buf2 = buf2;
-
-	while (_buf1 != (buf1 + len_buf1)) {
-		if (*_buf1 != *_buf2) {
-			return false;
-		}
-		++_buf1;
-		++_buf2;
-	}
-
-	return true;
-}
 CBORPair::CBORPair(uint8_t* _buffer, size_t buffer_len, bool has_data)
 {
 	max_buf_len = buffer_len;
@@ -81,40 +62,4 @@ CBORPair::CBORPair(CBOR &obj)
 
 	//Jump to the end of the data chunk
 	w_ptr = buffer_begin + obj.length();
-}
-
-CBOR CBORPair::at(size_t idx)
-{
-	if (!is_pair() || (idx > n_elements())) {
-		return CBOR();
-	}
-
-	uint8_t *ele_begin = buffer_data_begin;
-
-	//Jump once to be on the first value
-	ele_begin += element_size(ele_begin);
-	//Jump to the reffered value
-	for (size_t i=0 ; i < idx ; ++i) {
-		ele_begin += element_size(ele_begin);
-		ele_begin += element_size(ele_begin);
-	}
-
-	return CBOR(ele_begin, element_size(ele_begin), true);
-}
-
-CBOR CBORPair::key_at(size_t idx)
-{
-	if (!is_pair() || (idx > n_elements())) {
-		return CBOR();
-	}
-
-	uint8_t *ele_begin = buffer_data_begin;
-
-	//Jump to the reffered key
-	for (size_t i=0 ; i < idx ; ++i) {
-		ele_begin += element_size(ele_begin);
-		ele_begin += element_size(ele_begin);
-	}
-
-	return CBOR(ele_begin, element_size(ele_begin), true);
 }

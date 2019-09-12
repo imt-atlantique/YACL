@@ -67,20 +67,3 @@ bool CBORArray::append()
 	increment_num_ele();
 	return add();
 }
-
-CBOR CBORArray::operator[](size_t idx)
-{
-	if (!is_array() || (idx > n_elements())) {
-		return CBOR();
-	}
-
-	//Put buffer on the first element of the table
-	uint8_t *ele_begin = buffer_data_begin;
-
-	//Jump to the reffered element
-	for (size_t i=0 ; i < idx ; ++i) {
-		ele_begin += element_size(ele_begin);
-	}
-
-	return CBOR(ele_begin, element_size(ele_begin), true);
-}

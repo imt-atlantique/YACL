@@ -5,24 +5,11 @@
 
 //! A class to handle CBOR dictionaries of key/value pairs.
 /*!
- * This class handles encoding and decoding of CBOR data key/values into a
+ * This class handles encoding of CBOR data key/values into a
  * CBOR Array dictionaries.
  */
 class CBORPair: public CBORComposed<CBOR_MAP>
 {
-	protected:
-		//! Check if two buffers store the same information.
-		/*!
-		 * Check that the two buffers have same length, and that they store
-		 * the same information.
-		 *
-		 * \param buf1 First buffer.
-		 * \param len_buf1 Number of elements in first buffer.
-		 * \param buf2 Second buffer.
-		 * \param len_buf2 Number of elements in second buffer.
-		 */
-		static bool buffer_equals(const uint8_t* buf1, size_t len_buf1,
-				const uint8_t* buf2, size_t len_buf2);
 	public:
 		/*!
 		 * Construct a CBOR PAIR with a DYNAMIC_INTERNAL buffer, big
@@ -91,75 +78,6 @@ class CBORPair: public CBORComposed<CBOR_MAP>
 
 			return ret_val;
 		}
-
-		//! Returns the CBOR value associated with a particular key.
-		/*!
-		 * This operator does not perform any copy.
-		 * However, it cannot be used to modify the value at key `key`.
-		 * Note that, as there is sometimes different CBOR representation of
-		 * a single value (e.g.: 4 can be coded with (u)int{8,16,32,64}), it may
-		 * be required to construct a CBOR object and pass it as the key.
-		 * If the CBOR PAIR object has two values associated with the same key,
-		 * this operator will return the first one in order of appearence in the
-		 * data buffer.
-		 *
-		 * \param key The key of the CBOR value to be retrieved.
-		 * \return The retrieved CBOR value, or a CBOR NULL if `key` cannot be
-		 * found or if this object does not actually stores a CBOR PAIR in its
-		 * buffer.
-		 */
-		template <typename T> CBOR operator[](T key)
-		{
-			if (!is_pair()) {
-				return CBOR();
-			}
-
-			CBOR idx_cbor = CBOR(key);
-			const uint8_t *idx_cbor_buffer = idx_cbor.to_CBOR();
-			size_t idx_cbor_size = idx_cbor.length();
-			uint8_t *ele_begin = buffer_data_begin;
-
-			//Search key until the end of the Pair (map) is found
-			for (size_t i=0 ; i < n_elements() ; ++i) {
-				//If key match
-				if (buffer_equals(idx_cbor_buffer, idx_cbor_size, ele_begin, element_size(ele_begin))) {
-					ele_begin += element_size(ele_begin);
-
-					return CBOR(ele_begin, element_size(ele_begin), true);
-				}
-				else {
-					//Key don't match, jump to next key
-					ele_begin += element_size(ele_begin);
-					ele_begin += element_size(ele_begin);
-				}
-			}
-
-			//Not found
-			return CBOR();
-		}
-
-		//! Returns the CBOR value located at an index.
-		/*!
-		 * This operator does not perform any copy.
-		 * However, it cannot be used to modify the value at index `idx`.
-		 *
-		 * \param idx The index of the CBOR value to be retrieved.
-		 * \return The retrieved object, or a CBOR NULL if `idx` is out of range
-		 * or if this object does not actually stores a CBOR PAIR in its buffer.
-		 */
-		CBOR at(size_t idx);
-
-		//! Returns the CBOR key located at an index.
-		/*!
-		 * This operator does not perform any copy.
-		 * However, it cannot be used to modify the key at index `idx`.
-		 *
-		 * \param idx The index of the CBOR key to be retrieved.
-		 * \return The retrieved object, or a CBOR NULL if `idx` is out of range
-		 * or if this object does not actually stores a CBOR PAIR in its buffer.
-		 */
-		CBOR key_at(size_t idx);
 };
 
 #endif
-

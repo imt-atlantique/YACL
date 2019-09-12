@@ -5,7 +5,7 @@
 
 //! A class to handle CBOR Arrays.
 /*!
- * This class handles encoding and decoding of CBOR data into a CBOR Array.
+ * This class handles encoding of CBOR data into a CBOR Array.
  */
 class CBORArray: public CBORComposed<CBOR_ARRAY>
 {
@@ -96,17 +96,6 @@ class CBORArray: public CBORComposed<CBOR_ARRAY>
 
 			return ret_val;
 		}
-
-		//! Returns the CBOR object located at an index.
-		/*!
-		 * This operator does not perform any copy.
-		 * However, it cannot be used to modify the value at index `idx`.
-		 *
-		 * \param idx The index of the CBOR element to be retrieved.
-		 * \return The retrieved object, or a CBOR NULL if `idx` is out of range
-		 * or if this object does not actually stores an array in its buffer.
-		 */
-		CBOR operator[](size_t idx);
 };
 
 #endif
