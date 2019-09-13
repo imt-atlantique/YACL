@@ -288,10 +288,10 @@ class CBOR
 		 */
 		template <typename T> CBOR(T value) { add(value); };
 
-		//Specialization for C-style String
+		//! Constructor specialization for C-style String.
 		CBOR(const char* value);
 
-		//Specialization for common types
+		//! Constructor specialization for common types.
 		CBOR(char value);
 		CBOR(short value);
 		CBOR(int value);

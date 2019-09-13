@@ -8,9 +8,8 @@
 
 //! A class to handle composed CBOR Objects.
 /*!
- * This class handles encoding and decoding of basic CBOR data (int, float,
- * strings) into a composed CBOR objects such as an array or a dictionary of
- * key/values.
+ * This class handles encoding of multiple CBOR objects into a composed
+ * CBOR object such as an array or a dictionary of key/values.
  * 
  * \tparam cbor_type The byte corresponding to the composed CBOR type
  * (0x80 for CBOR arrays, 0xA0 for CBOR dictionaries).

@@ -91,12 +91,10 @@ for (size_t i=0 ; i < cbor_arr.n_elements() ; ++i) {
 	CBOR cbor_ele = cbor_arr[i];
 }
 ```
-When an element is itself an array or a dictionary, auxiliary objects must be used to handle them:
-```c++
-CBORArray cbor_nested_arr = CBORArray(cbor_arr[5]);
-CBORPair cbor_dict = CBORPair(cbor_arr[6]);
-```
-In particular, multi-level indexing (`cbor_arr[x][y][z]`) is not possible.
+Note that:
+ - Multi-level indexing (like `cbor_arr[x][y][z]`) is possible.
+ - `CBORArray` is only required for encoding. Decoding can be performed using regular CBOR objects.
+
 
 ### Dictionaries of key/value pairs
 Dictionaries are handled by the class `CBORPair`:
@@ -109,9 +107,9 @@ Using `append(key, value)`, any CBOR-convertible element or CBOR object key and 
 CBORPair cbor_dict = CBORPair();
 
 //CBOR-convertible elements
-cbor_pair.append(1, 2);
-cbor_pair.append(3.14, 3);
-cbor_pair.append("4", "Hello, world");
+cbor_dict.append(1, 2);
+cbor_dict.append(3.14, 3);
+cbor_dict.append("4", "Hello, world");
 
 //CBOR objects
 CBOR cbor_obj = CBOR("YACL!");
@@ -135,20 +133,42 @@ for (size_t i=0 ; i < cbor_dict.n_elements() ; ++i) {
 	CBOR cbor_val = cbor_dict.at(i); //or cbor_val[cbor_dict.key_at(i)] (slower in this context)
 }
 ```
-When an element is itself an array or a dictionary, auxiliary objects must be used to handle them:
-```c++
-CBORArray cbor_arr = CBORArray(cbor_dict[-5]);
-CBORPair cbor_nested_dict = CBORPair(cbor_arr["YACL!"]);
-```
-In particular, multi-level indexing (`cbor_dict[x][y][z]`) is not possible.
+
+Note that:
+ - Multi-level indexing (like `cbor_dict["YACL!"][0]`) is possible.
+ - `CBORPair` is only required for encoding. Decoding can be performed using regular CBOR objects.
 
 ### Importing and exporting
 
 Import an encoded CBOR message:
 
 ```c++
-uint8_t buffer[5] = {0x64, 0x59, 0x41, 0x43, 0x4C}; //CBOR-encoded message
-CBOR cbor_data = CBOR(buffer, 5);
+/*CBOR encoding of:
+ *{
+ *	"lat": 48.12009811401367,
+ *	"lon": -1.6286300420761108,
+ *	"temperatures": [25, 24, 24, 26]
+ *}
+ */
+uint8_t buffer[41] = {0xA3, 0x63, 0x6C, 0x61, 0x74, 0xFA, 0x42, 0x40,
+			0x7A, 0xFB, 0x63, 0x6C, 0x6F, 0x6E, 0xFA, 0xBF,
+			0xD0, 0x76, 0xF3, 0x6C, 0x74, 0x65, 0x6D, 0x70,
+			0x65, 0x72, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73,
+			0x84, 0x18, 0x19, 0x18, 0x18, 0x18, 0x18, 0x18,
+			0x1A};
+CBOR cbor_data = CBOR(buffer, 41);
+```
+All decoding operations (including array and dictionnary element access) can be done using only `CBOR` objects. That is: no need for `CBORArray` nor `CBORPair` for decoding.
+Primitive types (int, float, etc.) can be converted from their CBOR representations using type-casting.
+```c++
+//Print lat and lon
+Serial.println((float)cbor_data["lat"]);
+Serial.println((float)cbor_data["lon"]);
+
+//Print temperatures
+for (size_t i=0 ; i < cbor_data["temperatures"].n_elements() ; ++i) {
+	Serial.println((int)cbor_data["temperatures"][i]);
+}
 ```
 
 Export a CBOR/CBORPair/CBORArray object to a CBOR-encoded message:
