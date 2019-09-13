@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <WString.h>
-#include <Arduino.h>
 
 #define CBOR_TYPE_MASK 0xE0
 #define CBOR_INFO_BITS 0x1F
