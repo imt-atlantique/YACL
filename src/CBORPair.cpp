@@ -49,17 +49,3 @@ CBORPair::CBORPair(const uint8_t* _buffer, size_t buf_len)
 		w_ptr += element_size(w_ptr);
 	}
 }
-
-CBORPair::CBORPair(CBOR &obj)
-{
-	max_buf_len = obj.length();
-	buffer_type = BUFFER_EXTERNAL;
-
-	ext_buffer_begin = obj.get_buffer();
-	buffer_begin = ext_buffer_begin;
-
-	buffer_data_begin = buffer_begin + compute_type_num_len(n_elements());
-
-	//Jump to the end of the data chunk
-	w_ptr = buffer_begin + obj.length();
-}

@@ -47,20 +47,6 @@ class CBORArray: public CBORComposed<CBOR_ARRAY>
 		 */
 		CBORArray(const uint8_t* _buffer, size_t buf_len);
 
-		//! Construct a CBOR array from a CBOR object.
-		/*!
-		 * Behaviour when obj does not contain a CBOR array is undefined.
-		 * Note that this is not a copy constructor. This object and `obj` share
-		 * the same buffer for storing information.
-		 *
-		 * New elements can be added.
-		 * However, the size of the length field cannot be expanded
-		 * (expect less than 2^NUM_ELE_PROVISION-1 elements capacity).
-		 *
-		 * \param obj A CBOR object containing a CBOR ARRAY.
-		 */
-		CBORArray(CBOR &obj);
-
 		//! Appends CBOR NULL to the end of this CBOR ARRAY.
 		/*!
 		 * \return True if the operation was successful, false otherwise.
