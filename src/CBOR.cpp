@@ -181,6 +181,350 @@ CBOR::CBOR(const uint8_t* buffer, size_t buffer_len)
 	w_ptr += element_size(w_ptr);
 }
 
+CBOR::CBOR(char tag_value, const CBOR& tag_item)
+{
+	if (sizeof(char) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(char) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(char) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(char) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(short tag_value, const CBOR& tag_item)
+{
+	if (sizeof(short) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(short) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(short) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(short) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(int tag_value, const CBOR& tag_item)
+{
+	if (sizeof(int) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(int) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(int) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(int) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(long tag_value, const CBOR& tag_item)
+{
+	if (sizeof(long) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(long) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(long) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(long) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(unsigned char tag_value, const CBOR& tag_item)
+{
+	if (sizeof(unsigned char) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(unsigned short tag_value, const CBOR& tag_item)
+{
+	if (sizeof(unsigned short) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(unsigned int tag_value, const CBOR& tag_item)
+{
+	if (sizeof(unsigned int) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(unsigned long tag_value, const CBOR& tag_item)
+{
+	if (sizeof(unsigned long) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, char tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(char) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(char) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(char) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(char) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, short tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(short) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(short) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(short) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(short) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, int tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(int) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(int) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(int) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(int) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, long tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(long) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(long) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(long) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(long) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned char tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(unsigned char) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned char) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned short tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(unsigned short) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned short) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned int tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(unsigned int) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned int) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
+CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned long tag_value, const CBOR& tag_item)
+{
+	max_buf_len = buffer_len;
+
+	buffer_begin = _buffer;
+	w_ptr = _buffer;
+
+	buffer_type = BUFFER_EXTERNAL;
+
+	if (sizeof(unsigned long) == 1) {
+		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 2) {
+		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 3) {
+		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+	}
+	else if (sizeof(unsigned long) == 4) {
+		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+	}
+
+	add(tag_item);
+}
+
 CBOR::CBOR(const CBOR &obj) {
 	const uint8_t* obj_buffer = obj.to_CBOR();
 

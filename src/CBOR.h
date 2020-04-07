@@ -316,6 +316,36 @@ class CBOR
 		 */
 		CBOR(const uint8_t* buffer, size_t buffer_len);
 
+		//! Constructor specialization for tagged CBOR objects.
+		/*!
+		 * \param tag_value Tag value to be encoded.
+		 * \param tag_item The tagged CBOR item.
+		 */
+		CBOR(char tag_value, const CBOR& tag_item);
+		CBOR(short tag_value, const CBOR& tag_item);
+		CBOR(int tag_value, const CBOR& tag_item);
+		CBOR(long tag_value, const CBOR& tag_item);
+		CBOR(unsigned char tag_value, const CBOR& tag_item);
+		CBOR(unsigned short tag_value, const CBOR& tag_item);
+		CBOR(unsigned int tag_value, const CBOR& tag_item);
+		CBOR(unsigned long tag_value, const CBOR& tag_item);
+
+		//! Constructor specialization for tagged CBOR objects. Uses an external buffer.
+		/*!
+		 * \param buffer Pointer to the beginning of the external buffer.
+		 * \param buffer_len Size (in bytes) of the external buffer.
+		 * \param tag_value Tag value to be encoded.
+		 * \param tag_item The tagged CBOR item.
+		 */
+		CBOR(uint8_t* _buffer, size_t buffer_len, char tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, short tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, int tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, long tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned char tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned short tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned int tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned long tag_value, const CBOR& tag_item);
+
 		//! Copy constructor.
 		CBOR(const CBOR &obj);
 

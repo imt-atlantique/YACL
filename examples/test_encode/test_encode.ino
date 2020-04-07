@@ -368,6 +368,26 @@ bool test_pair()
 	return false;
 }
 
+bool test_tag()
+{
+	const uint8_t expected[6] = {0xC4, 0x82, 0x21, 0x19, 0x6A, 0xB3};
+	size_t len_expected = 6;
+	uint8_t cbor_buffer[6];
+	uint8_t arr_buffer[14]; //14
+
+	CBORArray arr = CBORArray(arr_buffer, 14, false); //14
+	arr.append(-2);
+	arr.append(27315);
+
+	CBOR cbor = CBOR(cbor_buffer, 6, 0x04, arr);
+
+	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
+		return true;
+	}
+
+	return false;
+}
+
 void setup()
 {
 	//Basic CBOR types
@@ -554,6 +574,14 @@ void setup()
 
 	Serial.print("[1, 3.16, \"test\"] : ");
 	if (test_array3()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("Custom tag encoding : ");
+	if (test_tag()) {
 		Serial.println("OK");
 	}
 	else {
