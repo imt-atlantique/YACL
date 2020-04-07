@@ -930,6 +930,14 @@ size_t CBOR::element_size(uint8_t *ptr)
 		}
 	}
 
+	//Tags
+	else if(*type >= 0xC0 && *type <= 0xDB) {
+		//Size of tag value
+		ptr += compute_type_num_len(decode_abs_num(ptr));
+		//Size of tag item
+		ptr += element_size(ptr);
+	}
+
 	//Simple value && false / true / null / undefined / floats
 	else if (*type >= 0xE0 && *type <= 0xF7) {
 		++ptr;
