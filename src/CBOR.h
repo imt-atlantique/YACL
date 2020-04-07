@@ -468,6 +468,11 @@ class CBOR
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_pair(const uint8_t* buffer);
+		//! Return true if the CBOR object is a tagged CBOR object.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_tag(const uint8_t* buffer);
 
 		//! Return true if this CBOR object is a CBOR NULL.
 		bool is_null() const {return is_null(get_const_buffer_begin()); };
@@ -501,6 +506,8 @@ class CBOR
 		bool is_array() const {return is_array(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a dictionnary of key/value pairs.
 		bool is_pair() const {return is_pair(get_const_buffer_begin()); };
+		//! Return true if the CBOR object is a tagged CBOR object.
+		bool is_tag() const {return is_tag(get_const_buffer_begin()); };
 
 		//! Convert this CBOR object to a boolean.
 		/*!
@@ -595,6 +602,22 @@ class CBOR
 		 * \returns this CBOR string as an Arduino String object.
 		 */
 		String to_string() const;
+		//! When this CBOR object is a CBOR TAG, return the tag value.
+		/*!
+		 * Output of this operator when this CBOR object is not a CBOR TAG
+		 *  is undefined.
+		 *
+		 *  \return The tag value of this CBOR TAG.
+		 */
+		size_t get_tag_value() const;
+		//! When this CBOR object is a CBOR TAG, return the tag item.
+		/*!
+		 * Output of this operator when this CBOR object is not a CBOR TAG
+		 *  is undefined.
+		 *
+		 *  \return The tag item of this CBOR TAG.
+		 */
+		CBOR get_tag_item() const;
 
 		//! Get the number of elements in this composed CBOR object.
 		/*!

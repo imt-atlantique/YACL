@@ -575,7 +575,7 @@ bool test_array5()
 bool test_pair()
 {
 	const uint8_t cbor_data[] = {0xa2, 0x01, 0x02, 0x03, 0x04};
-	CBOR cbor = CBOR(cbor_data, 14);
+	CBOR cbor = CBOR(cbor_data, 5); //Test that
 
 	if ((int)cbor[1] == 2 && (int)cbor[3] == 4) {
 		return true;
@@ -587,7 +587,7 @@ bool test_pair()
 bool test_pair1()
 {
 	const uint8_t cbor_data[] = {0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03};
-	CBOR cbor = CBOR(cbor_data, 18);
+	CBOR cbor = CBOR(cbor_data, 9);
 
 	if ((int)cbor["a"] == 1) {
  		if((int)cbor["b"][0] == 2 && (int)cbor["b"][1] == 3) {
@@ -603,7 +603,7 @@ bool test_pair2()
 	const uint8_t cbor_data[] = {0xa5, 0x61, 0x61, 0x61, 0x41, 0x61, 0x62, 0x61, \
 								0x42, 0x61, 0x63, 0x61, 0x43, 0x61, 0x64, 0x61, \
 								0x44, 0x61, 0x65, 0x61, 0x45};
-	CBOR cbor = CBOR(cbor_data, 30);
+	CBOR cbor = CBOR(cbor_data, 21);
 
 	if (cbor["a"].to_string() == "A" && cbor["b"].to_string() == "B" \
 		&& cbor["c"].to_string() == "C" && cbor["d"].to_string() == "D" \
@@ -613,6 +613,34 @@ bool test_pair2()
 	}
 
 	return false;
+}
+
+bool test_tag()
+{
+	const uint8_t cbor_data[6] = {0xC4, 0x82, 0x21, 0x19, 0x6A, 0xB3};
+
+	CBOR cbor = CBOR(cbor_data, 6);
+	CBOR tag_item = cbor.get_tag_item();
+
+	if (!cbor.is_tag()) {
+		return false;
+	}
+
+	if (cbor.get_tag_value() != 0x04) {
+		return false;
+	}
+
+	if (tag_item.length() != 5) {
+		return false;
+	}
+
+	for (int i=0 ; i < 5 ; ++i) {
+		if (tag_item.to_CBOR()[i] != cbor_data[i+1]) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void setup()
@@ -991,6 +1019,14 @@ void setup()
 
 	Serial.print("{\"a\": \"A\", \"b\": \"B\", \"c\": \"C\", \"d\": \"D\", \"e\": \"E\"} : ");
 	if (test_pair2()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("Custom tag : ");
+	if (test_tag()) {
 		Serial.println("OK");
 	}
 	else {

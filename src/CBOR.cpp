@@ -184,16 +184,16 @@ CBOR::CBOR(const uint8_t* buffer, size_t buffer_len)
 CBOR::CBOR(char tag_value, const CBOR& tag_item)
 {
 	if (sizeof(char) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -202,16 +202,16 @@ CBOR::CBOR(char tag_value, const CBOR& tag_item)
 CBOR::CBOR(short tag_value, const CBOR& tag_item)
 {
 	if (sizeof(short) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -220,16 +220,16 @@ CBOR::CBOR(short tag_value, const CBOR& tag_item)
 CBOR::CBOR(int tag_value, const CBOR& tag_item)
 {
 	if (sizeof(int) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -238,16 +238,16 @@ CBOR::CBOR(int tag_value, const CBOR& tag_item)
 CBOR::CBOR(long tag_value, const CBOR& tag_item)
 {
 	if (sizeof(long) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -256,16 +256,16 @@ CBOR::CBOR(long tag_value, const CBOR& tag_item)
 CBOR::CBOR(unsigned char tag_value, const CBOR& tag_item)
 {
 	if (sizeof(unsigned char) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -274,16 +274,16 @@ CBOR::CBOR(unsigned char tag_value, const CBOR& tag_item)
 CBOR::CBOR(unsigned short tag_value, const CBOR& tag_item)
 {
 	if (sizeof(unsigned short) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -292,16 +292,16 @@ CBOR::CBOR(unsigned short tag_value, const CBOR& tag_item)
 CBOR::CBOR(unsigned int tag_value, const CBOR& tag_item)
 {
 	if (sizeof(unsigned int) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -310,16 +310,16 @@ CBOR::CBOR(unsigned int tag_value, const CBOR& tag_item)
 CBOR::CBOR(unsigned long tag_value, const CBOR& tag_item)
 {
 	if (sizeof(unsigned long) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -335,16 +335,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, char tag_value, const CBOR& tag_
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(char) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(char) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -360,16 +360,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, short tag_value, const CBOR& tag
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(short) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(short) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -385,16 +385,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, int tag_value, const CBOR& tag_i
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(int) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(int) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -410,16 +410,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, long tag_value, const CBOR& tag_
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(long) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(long) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -435,16 +435,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned char tag_value, const C
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(unsigned char) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned char) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -460,16 +460,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned short tag_value, const 
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(unsigned short) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned short) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -485,16 +485,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned int tag_value, const CB
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(unsigned int) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned int) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -510,16 +510,16 @@ CBOR::CBOR(uint8_t* _buffer, size_t buffer_len, unsigned long tag_value, const C
 	buffer_type = BUFFER_EXTERNAL;
 
 	if (sizeof(unsigned long) == 1) {
-		encode_type_num(CBOR_TAG, (uint8_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint8_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 2) {
-		encode_type_num(CBOR_TAG, (uint16_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint16_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 3) {
-		encode_type_num(CBOR_TAG, (uint32_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint32_t)(tag_value&~CBOR_7));
 	}
 	else if (sizeof(unsigned long) == 4) {
-		encode_type_num(CBOR_TAG, (uint64_t)tag_value);
+		encode_type_num(CBOR_TAG, (uint64_t)(tag_value&~CBOR_7));
 	}
 
 	add(tag_item);
@@ -1295,6 +1295,11 @@ bool CBOR::is_pair(const uint8_t* buffer)
 	return ((buffer[0]&CBOR_7) == CBOR_MAP)?true:false;
 }
 
+bool CBOR::is_tag(const uint8_t* buffer)
+{
+	return ((buffer[0]&CBOR_7) == CBOR_TAG)?true:false;
+}
+
 CBOR::operator bool() const
 {
 	return (get_const_buffer_begin()[0] == CBOR_TRUE)?true:false;
@@ -1568,6 +1573,21 @@ String CBOR::to_string() const
 	get_string(str);
 
 	return str;
+}
+
+size_t CBOR::get_tag_value() const
+{
+	return decode_abs_num(get_const_buffer_begin());
+}
+
+CBOR CBOR::get_tag_item() const
+{
+	uint8_t *ele_begin = get_buffer_begin();
+
+	//Jump to the begining of the tag item
+	ele_begin += compute_type_num_len(get_tag_value());
+
+	return CBOR(ele_begin, element_size(ele_begin), true);
 }
 
 size_t CBOR::n_elements() const
