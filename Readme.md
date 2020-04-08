@@ -179,5 +179,4 @@ size_t buffer_len = cbor_msg.length();
 
 ## Advanced usage
 
-TODO
-
+see [AdvancedUsage.md](AdvancedUsage.md)
