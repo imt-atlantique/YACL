@@ -88,7 +88,7 @@ arr.append(1);
 
 CBOR ele1 = arr[1];
 ```
-Then, the actual data is stored in `arr`, and only in `arr`. Hence, modifications of `arr` can impact `ele1`.
+Then, the actual data is stored in `arr`, and only in `arr`. Hence, modifications of `arr` can impact `ele1`, and vice versa.
 
 If one wishes to do a copy, then he/she can use the copy constructor:
 ```c++
