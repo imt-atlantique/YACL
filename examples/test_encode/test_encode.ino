@@ -379,7 +379,40 @@ bool test_tag()
 	arr.append(-2);
 	arr.append(27315);
 
-	CBOR cbor = CBOR(cbor_buffer, 6, 0x04, arr);
+	CBOR cbor = CBOR(cbor_buffer, 6);
+	cbor.encode(0x04, arr);
+
+	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
+		return true;
+	}
+
+	return false;
+}
+
+bool test_bytestr()
+{
+	const uint8_t expected[1] = {0x40};
+	size_t len_expected = 1;
+
+	CBOR cbor = CBOR();
+	cbor.encode((const uint8_t*)NULL, 0);
+
+	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
+		return true;
+	}
+
+	return false;
+}
+
+bool test_bytestr1()
+{
+	const uint8_t expected[5] = {0x44, 0x01, 0x02, 0x03, 0x04};
+	size_t len_expected = 5;
+	
+	const uint8_t data[4] = {0x01, 0x02, 0x03, 0x04};
+
+	CBOR cbor = CBOR();
+	cbor.encode(data, 4);
 
 	if (buffer_equals(expected, len_expected, cbor.to_CBOR(), cbor.length())) {
 		return true;
@@ -582,6 +615,22 @@ void setup()
 
 	Serial.print("Custom tag encoding : ");
 	if (test_tag()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("h'' : ");
+	if (test_bytestr()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("h'01020304' : ");
+	if (test_bytestr1()) {
 		Serial.println("OK");
 	}
 	else {

@@ -521,26 +521,6 @@ bool CBOR::add(bool value)
 	return true;
 }
 
-bool CBOR::add(uint8_t value)
-{
-	return encode_type_num(CBOR_UINT, value);
-}
-
-bool CBOR::add(uint16_t value)
-{
-	return encode_type_num(CBOR_UINT, value);
-}
-
-bool CBOR::add(uint32_t value)
-{
-	return encode_type_num(CBOR_UINT, value);
-}
-
-bool CBOR::add(uint64_t value)
-{
-	return encode_type_num(CBOR_UINT, value);
-}
-
 bool CBOR::add(int8_t value)
 {
 	if (value < 0) {
@@ -638,7 +618,7 @@ bool CBOR::add(const char* value)
 	}
 
 	//Encode string length
-	encode_type_num(CBOR_TEXT, len_string*sizeof(uint8_t));
+	encode_type_num(CBOR_TEXT, len_string);
 	if (len_string == 0) {
 		return true;
 	}
@@ -646,6 +626,26 @@ bool CBOR::add(const char* value)
 	//Copy string content (without '\0')
 	memcpy(w_ptr, value, len_string*sizeof(uint8_t));
 	w_ptr += len_string;
+
+	return true;
+}
+
+bool CBOR::add(const uint8_t* value, size_t len)
+{
+	//Check buffer size
+	if (!reserve(length() + len + compute_type_num_len(len))) {
+		return false;
+	}
+
+	//Encode length
+	encode_type_num(CBOR_BYTES, len);
+	if (len == 0) {
+		return true;
+	}
+
+	//Copy string content (without '\0')
+	memcpy(w_ptr, value, len*sizeof(uint8_t));
+	w_ptr += len;
 
 	return true;
 }
