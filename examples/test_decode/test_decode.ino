@@ -476,6 +476,22 @@ bool test_string_char2()
 	return false;
 }
 
+bool test_string_char3()
+{
+	const uint8_t cbor_data[] = {0x78, 0x1A, 0x4C, 0x6F, 0x72, 0x65, 0x6D, 0x20, 0x69, 0x70, 0x73, 0x75, 0x6D, 0x20, 0x64, 0x6F, 0x6C, 0x6F, 0x72, 0x20, 0x73, 0x69, 0x74, 0x20, 0x61, 0x6D, 0x65, 0x74};
+	CBOR cbor = CBOR(cbor_data, 28);
+	const char* ref_str = "Lorem ipsum dolor sit amet";
+	char decoded_str[27] = "";
+
+	cbor.get_string(decoded_str);
+	if (cbor.is_string() && (cbor.get_string_len() == strlen(ref_str)) \
+		 && (strcmp(decoded_str, ref_str) == 0)) {
+		return true;
+	}
+
+	return false;
+}
+
 bool test_string_string1()
 {
 	const uint8_t cbor_data[] = {0x68, 0x61, 0x6f, 0x65, 0x75, 0x31, 0x32, 0x33, 0x34};
@@ -980,6 +996,14 @@ void setup()
 
 	Serial.print("åöéûのかめ亀 (char []) : ");
 	if (test_string_char2()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("Lorem ipsum... (char []) : ");
+	if (test_string_char3()) {
 		Serial.println("OK");
 	}
 	else {
