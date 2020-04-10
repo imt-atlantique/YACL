@@ -124,7 +124,7 @@ template <uint8_t cbor_type> class CBORComposed: public CBOR
 		}
 
 		//! Copy constructor.
-		CBORComposed(const CBORComposed &obj)
+		CBORComposed(const CBORComposed &obj) : CBOR()
 		{
 			uint8_t type_num_len = compute_type_num_len(obj.n_elements());
 			//Reserve buf_len plus maximum size of a type_num : 9 bytes to encode a

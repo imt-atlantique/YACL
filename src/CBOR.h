@@ -106,6 +106,21 @@ class CBOR
 		bool encode_type_num(uint8_t cbor_type, uint16_t val);
 		bool encode_type_num(uint8_t cbor_type, uint32_t val);
 		bool encode_type_num(uint8_t cbor_type, uint64_t val);
+		template <typename T> bool encode_type_num(uint8_t cbor_type, T value)
+		{
+			if (sizeof(T) == 1) {
+				return encode_type_num(cbor_type, (uint8_t)value);
+			}
+			else if (sizeof(T) == 2) {
+				return encode_type_num(cbor_type, (uint16_t)value);
+			}
+			else if (sizeof(T) == 3) {
+				return encode_type_num(cbor_type, (uint32_t)value);
+			}
+			else if (sizeof(T) == 4) {
+				return encode_type_num(cbor_type, (uint64_t)value);
+			}
+		}
 
 		//! Determine if this CBOR object is a negative integer.
 		/*!
@@ -140,7 +155,7 @@ class CBOR
 		//! Interpret the value pointed by buffer as an integer numerical value.
 		/*!
 		 * \param ptr Pointer to the begining of the element in buffer.
-		 * \return The decoded numerical value.
+		 * \return The decoded numerical value, or 0 if decoding fails.
 		 */
 		static size_t decode_abs_num(const uint8_t *ptr);
 
@@ -256,6 +271,52 @@ class CBOR
 		 */
 		bool add(const CBOR &value);
 
+		//! Add a CBOR signed integer type from a native integer type whose binary length is unknown.
+		/*!
+		 * \param value The signed integer to encode.
+		 * \return False if anything goes wrong. True otherwise.
+		 */
+		template <typename T> bool add_int(T value)
+		{
+			if (sizeof(T) == 1) {
+				return add((int8_t)value);
+			}
+			else if (sizeof(T) == 2) {
+				return add((int16_t)value);
+			}
+			else if (sizeof(T) == 3) {
+				return add((int32_t)value);
+			}
+			else if (sizeof(T) == 4) {
+				return add((int64_t)value);
+			}
+
+			return false;
+		}
+
+		//! Add a CBOR unsigned integer type from a native integer type whose binary length is unknown.
+		/*!
+		 * \param value The unsigned integer to encode.
+		 * \return False if anything goes wrong. True otherwise.
+		 */
+		template <typename T> bool add_uint(T value)
+		{
+			if (sizeof(T) == 1) {
+				return add((uint8_t)value);
+			}
+			else if (sizeof(T) == 2) {
+				return add((uint16_t)value);
+			}
+			else if (sizeof(T) == 3) {
+				return add((uint32_t)value);
+			}
+			else if (sizeof(T) == 4) {
+				return add((uint64_t)value);
+			}
+
+			return false;
+		}
+
 		/*!
 		 * Helper function for operator[]: when index is a non-float numeric,
 		 * then operator[] can call at() for a CBOR ARRAY, or find_by_key() for
@@ -276,6 +337,47 @@ class CBOR
 			//Not a CBOR PAIR nor a CBOR ARRAY
 			return CBOR();
 		}
+
+		//! Helper for tagged CBOR objects construction.
+		/*!
+		 * \param tag_value Tag value to be encoded.
+		 * \param tag_item The tagged CBOR item.
+		 */
+		template <typename T> bool init_tag(T tag_value, const CBOR& tag_item)
+		{
+			bool status = false;
+
+			status |= encode_type_num(CBOR_TAG, tag_value);
+			status |= add(tag_item);
+
+			return status;
+		}
+
+		//! Helper for tagged CBOR objects construction. Uses an external buffer.
+		/*!
+		 * \param buffer Pointer to the beginning of the external buffer.
+		 * \param buffer_len Size (in bytes) of the external buffer.
+		 * \param tag_value Tag value to be encoded.
+		 * \param tag_item The tagged CBOR item.
+		 */
+		template <typename T> bool init_tag(uint8_t* _buffer, size_t buffer_len,
+				T tag_value, const CBOR& tag_item)
+		{
+			bool status = false;
+
+			max_buf_len = buffer_len;
+
+			buffer_begin = _buffer;
+			w_ptr = _buffer;
+
+			buffer_type = BUFFER_EXTERNAL;
+
+			status |= encode_type_num(CBOR_TAG, tag_value);
+			status |= add(tag_item);
+
+			return status;
+		}
+
 	public:
 		//Constructors for primitive types
 		//! Construct a stack-allocated NULL CBOR object.
@@ -285,20 +387,17 @@ class CBOR
 		/*!
 		 * \param value The value to encode.
 		 */
-		template <typename T> CBOR(T value) { add(value); };
-
-		//! Constructor specialization for C-style String.
-		CBOR(const char* value);
+		template <typename T> CBOR(T value) { add(value); }
 
 		//! Constructor specialization for common types.
-		CBOR(char value);
-		CBOR(short value);
-		CBOR(int value);
-		CBOR(long value);
-		CBOR(unsigned char value);
-		CBOR(unsigned short value);
-		CBOR(unsigned int value);
-		CBOR(unsigned long value);
+		CBOR(char value) { add_int(value); }
+		CBOR(short value) { add_int(value); }
+		CBOR(int value) { add_int(value); }
+		CBOR(long value) { add_int(value); }
+		CBOR(unsigned char value) { add_uint(value); }
+		CBOR(unsigned short value) { add_uint(value); }
+		CBOR(unsigned int value) { add_uint(value); }
+		CBOR(unsigned long value) { add_uint(value); }
 
 		//! Construct a CBOR object using an external buffer.
 		/*!
@@ -316,35 +415,43 @@ class CBOR
 		 */
 		CBOR(const uint8_t* buffer, size_t buffer_len);
 
-		//! Constructor specialization for tagged CBOR objects.
+		//! Constructor for tagged CBOR objects.
 		/*!
 		 * \param tag_value Tag value to be encoded.
 		 * \param tag_item The tagged CBOR item.
 		 */
-		CBOR(char tag_value, const CBOR& tag_item);
-		CBOR(short tag_value, const CBOR& tag_item);
-		CBOR(int tag_value, const CBOR& tag_item);
-		CBOR(long tag_value, const CBOR& tag_item);
-		CBOR(unsigned char tag_value, const CBOR& tag_item);
-		CBOR(unsigned short tag_value, const CBOR& tag_item);
-		CBOR(unsigned int tag_value, const CBOR& tag_item);
-		CBOR(unsigned long tag_value, const CBOR& tag_item);
+		CBOR(char tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(short tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(int tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(long tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(unsigned char tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(unsigned short tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(unsigned int tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
+		CBOR(unsigned long tag_value, const CBOR& tag_item) { init_tag(tag_value, tag_item);}
 
-		//! Constructor specialization for tagged CBOR objects. Uses an external buffer.
+		//! Constructor for tagged CBOR objects. Uses an external buffer.
 		/*!
 		 * \param buffer Pointer to the beginning of the external buffer.
 		 * \param buffer_len Size (in bytes) of the external buffer.
 		 * \param tag_value Tag value to be encoded.
 		 * \param tag_item The tagged CBOR item.
 		 */
-		CBOR(uint8_t* _buffer, size_t buffer_len, char tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, short tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, int tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, long tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned char tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned short tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned int tag_value, const CBOR& tag_item);
-		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned long tag_value, const CBOR& tag_item);
+		CBOR(uint8_t* _buffer, size_t buffer_len, char tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, short tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, int tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, long tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned char tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned short tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned int tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
+		CBOR(uint8_t* _buffer, size_t buffer_len, unsigned long tag_value, const CBOR& tag_item)
+		{ init_tag(_buffer, buffer_len, tag_value, tag_item); }
 
 		//! Copy constructor.
 		CBOR(const CBOR &obj);
@@ -648,7 +755,7 @@ class CBOR
 		 *
 		 *  \return The tag item of this CBOR TAG.
 		 */
-		CBOR get_tag_item() const;
+		CBOR get_tag_item();
 
 		//! Get the number of elements in this composed CBOR object.
 		/*!
@@ -796,11 +903,11 @@ class CBOR
 		}
 
 		//Specialization of operator [] for numeric types
-		CBOR operator[](char key)	{ return access_op_numeric(key); };
-		CBOR operator[](short key)	{ return access_op_numeric(key); };
-		CBOR operator[](int key)	{ return access_op_numeric(key); };
-		CBOR operator[](long key)	{ return access_op_numeric(key); };
-		CBOR operator[](long long key)	{ return access_op_numeric(key); };
+		CBOR operator[](char key)	{ return access_op_numeric((unsigned char)key); };
+		CBOR operator[](short key)	{ return access_op_numeric((unsigned short)key); };
+		CBOR operator[](int key)	{ return access_op_numeric((unsigned int)key); };
+		CBOR operator[](long key)	{ return access_op_numeric((unsigned long)key); };
+		CBOR operator[](long long key)	{ return access_op_numeric((unsigned long long)key); };
 		CBOR operator[](unsigned char key)	{ return access_op_numeric(key); };
 		CBOR operator[](unsigned short key)	{ return access_op_numeric(key); };
 		CBOR operator[](unsigned int key)	{ return access_op_numeric(key); };
