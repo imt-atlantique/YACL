@@ -270,52 +270,6 @@ class CBOR
 			return status;
 		}
 
-		//! Add a CBOR signed integer type from a native integer type whose binary length is unknown.
-		/*!
-		 * \param value The signed integer to encode.
-		 * \return False if anything goes wrong. True otherwise.
-		 */
-		template <typename T> bool add_int(T value)
-		{
-			if (sizeof(T) == 1) {
-				return add((int8_t)value);
-			}
-			else if (sizeof(T) == 2) {
-				return add((int16_t)value);
-			}
-			else if (sizeof(T) == 3) {
-				return add((int32_t)value);
-			}
-			else if (sizeof(T) == 4) {
-				return add((int64_t)value);
-			}
-
-			return false;
-		}
-
-		//! Add a CBOR unsigned integer type from a native integer type whose binary length is unknown.
-		/*!
-		 * \param value The unsigned integer to encode.
-		 * \return False if anything goes wrong. True otherwise.
-		 */
-		template <typename T> bool add_uint(T value)
-		{
-			if (sizeof(T) == 1) {
-				return add((uint8_t)value);
-			}
-			else if (sizeof(T) == 2) {
-				return add((uint16_t)value);
-			}
-			else if (sizeof(T) == 3) {
-				return add((uint32_t)value);
-			}
-			else if (sizeof(T) == 4) {
-				return add((uint64_t)value);
-			}
-
-			return false;
-		}
-
 		/*!
 		 * Helper function for operator[]: when index is a non-float numeric,
 		 * then operator[] can call at() for a CBOR ARRAY, or find_by_key() for
@@ -347,16 +301,6 @@ class CBOR
 		 * \param value The value to encode.
 		 */
 		template <typename T> CBOR(T value) { add(value); }
-
-		//! Constructor specialization for common types.
-		CBOR(char value) { add_int(value); }
-		CBOR(short value) { add_int(value); }
-		CBOR(int value) { add_int(value); }
-		CBOR(long value) { add_int(value); }
-		CBOR(unsigned char value) { add_uint(value); }
-		CBOR(unsigned short value) { add_uint(value); }
-		CBOR(unsigned int value) { add_uint(value); }
-		CBOR(unsigned long value) { add_uint(value); }
 
 		//! Constructor for tagged CBOR objects.
 		/*!
@@ -407,25 +351,6 @@ class CBOR
 			w_ptr = get_buffer_begin();
 			return add(value);
 		}
-
-		//! Specialization for common integer types
-		bool encode(char value)
-		{ w_ptr = get_buffer_begin(); return add_int(value); }
-		bool encode(short value)
-		{ w_ptr = get_buffer_begin(); return add_int(value); }
-		bool encode(int value)
-		{ w_ptr = get_buffer_begin(); return add_int(value); }
-		bool encode(long value)
-		{ w_ptr = get_buffer_begin(); return add_int(value); }
-
-		bool encode(unsigned char value)
-		{ w_ptr = get_buffer_begin(); return add_uint(value); }
-		bool encode(unsigned short value)
-		{ w_ptr = get_buffer_begin(); return add_uint(value); }
-		bool encode(unsigned int value)
-		{ w_ptr = get_buffer_begin(); return add_uint(value); }
-		bool encode(unsigned long value)
-		{ w_ptr = get_buffer_begin(); return add_uint(value); }
 
 		//! Specialization for tags
 		bool encode(char tag_value, const CBOR& tag_item)
