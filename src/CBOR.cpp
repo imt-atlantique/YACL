@@ -1293,6 +1293,11 @@ bool CBOR::is_string(const uint8_t* buffer)
 	return ((buffer[0]&CBOR_7) == CBOR_TEXT)?true:false;
 }
 
+bool CBOR::is_bytestring(const uint8_t* buffer)
+{
+	return ((buffer[0]&CBOR_7) == CBOR_BYTES)?true:false;
+}
+
 bool CBOR::is_array(const uint8_t* buffer)
 {
 	return ((buffer[0]&CBOR_7) == CBOR_ARRAY)?true:false;
@@ -1549,16 +1554,12 @@ CBOR::operator double() const
 	return 0.0;
 }
 
-size_t CBOR::get_string_len() const
-{
-	return decode_abs_num(get_const_buffer_begin());
-}
-
 void CBOR::get_string(char* str) const
 {
 	size_t len_str = get_string_len();
 
-	memcpy(str, get_const_buffer_begin()+1, len_str*sizeof(uint8_t));
+	memcpy(str, get_const_buffer_begin() + compute_type_num_len(len_str),
+			len_str*sizeof(uint8_t));
 	str[len_str] = '\0';
 }
 
@@ -1569,7 +1570,9 @@ void CBOR::get_string(String& str) const
 	str.reserve(length() + len_str);
 
 	str = "";
-	for (const uint8_t* i=get_const_buffer_begin()+1 ; i < (get_const_buffer_begin()+1+len_str) ; ++i) {
+	for (const uint8_t* i=get_const_buffer_begin() + compute_type_num_len(len_str)
+		   	; i < (get_const_buffer_begin() + compute_type_num_len(len_str) + len_str)
+			; ++i) {
 		str += (char)(*i);
 	}
 }
@@ -1582,6 +1585,15 @@ String CBOR::to_string() const
 
 	return str;
 }
+
+void CBOR::get_bytestring(uint8_t* bytestr) const
+{
+	size_t len_bytestr = get_bytestring_len();
+
+	memcpy(bytestr, get_const_buffer_begin() + compute_type_num_len(len_bytestr),
+			len_bytestr*sizeof(uint8_t));
+}
+
 
 size_t CBOR::get_tag_value() const
 {

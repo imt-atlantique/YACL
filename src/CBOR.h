@@ -458,6 +458,11 @@ class CBOR
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_string(const uint8_t* buffer);
+		//! Return true if the CBOR object is a byte string.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_bytestring(const uint8_t* buffer);
 		//! Return true if the CBOR object is an array.
 		/*
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
@@ -502,6 +507,8 @@ class CBOR
 		bool is_float64() const {return is_float64(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a string.
 		bool is_string() const {return is_string(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is a byte string.
+		bool is_bytestring() const{return is_bytestring(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an array.
 		bool is_array() const {return is_array(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a dictionnary of key/value pairs.
@@ -580,7 +587,10 @@ class CBOR
 		 *
 		 * \return Length of a CBOR string.
 		 */
-		size_t get_string_len() const;
+		size_t get_string_len() const
+		{
+			return decode_abs_num(get_const_buffer_begin());
+		}
 		//! When this CBOR object is a CBOR STRING, copies it to this one passed as a parameter.
 		/*!
 		 * Behavior of this function when this CBOR object is not a string is undefined.
@@ -591,6 +601,8 @@ class CBOR
 		//! When this CBOR object is a CBOR STRING, copies it to this one passed as a parameter.
 		/*!
 		 * Behavior of this function when this CBOR object is not a string is undefined.
+		 * The string passed as a paramter must have enough capacity to store
+		 * the string, otherwise, memory corruption will occur.
 		 *
 		 * \param str Buffer into which this CBOR string is copied.
 		 */
@@ -602,6 +614,25 @@ class CBOR
 		 * \returns this CBOR string as an Arduino String object.
 		 */
 		String to_string() const;
+		//! When this CBOR object is a CBOR BYTE STRING, returns this byte string length.
+		/*!
+		 * Output of this function when this CBOR object is not a byte string is undefined.
+		 *
+		 * \return Length of a CBOR byte string.
+		 */
+		size_t get_bytestring_len() const
+		{
+			return decode_abs_num(get_const_buffer_begin());
+		}
+		//! When this CBOR object is a CBOR BYTE STRING, copies it to this one passed as a parameter.
+		/*!
+		 * Behavior of this function when this CBOR object is not a byte string is undefined.
+		 * The string passed as a paramter must have enough capacity to store
+		 * the string, otherwise, memory corruption will occur.
+		 *
+		 * \param str Buffer into which this CBOR byte string is copied.
+		 */
+		void get_bytestring(uint8_t* bytestr) const;
 		//! When this CBOR object is a CBOR TAG, return the tag value.
 		/*!
 		 * Output of this operator when this CBOR object is not a CBOR TAG

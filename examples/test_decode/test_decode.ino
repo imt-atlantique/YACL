@@ -643,6 +643,39 @@ bool test_tag()
 	return true;
 }
 
+bool test_bytestr()
+{
+	const uint8_t cbor_data[1] = {0x40};
+	CBOR cbor = CBOR(cbor_data, 1);
+
+	if (cbor.is_bytestring() && (cbor.get_bytestring_len() == 0)) {
+		return true;
+	}
+
+	return false;
+}
+
+bool test_bytestr1()
+{
+	const uint8_t cbor_data[5] = {0x44, 0x01, 0x02, 0x03, 0x04};
+	CBOR cbor = CBOR(cbor_data, 5);
+
+	const uint8_t ref_bytestr[4] = {0x01, 0x02, 0x03, 0x04};
+	uint8_t decoded_bytestr[4] = {0x00};
+
+	cbor.get_bytestring(decoded_bytestr);
+	if (cbor.is_bytestring() && (cbor.get_bytestring_len() == 4)) {
+		for (int i=0 ; i<cbor.get_bytestring_len() ; ++i) {
+			if (decoded_bytestr[i] != ref_bytestr[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
 void setup()
 {
 	//Basic CBOR types
@@ -1027,6 +1060,22 @@ void setup()
 
 	Serial.print("Custom tag : ");
 	if (test_tag()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("h'' : ");
+	if (test_bytestr()) {
+		Serial.println("OK");
+	}
+	else {
+		Serial.println("NOK");
+	}
+
+	Serial.print("h'01020304' : ");
+	if (test_bytestr1()) {
 		Serial.println("OK");
 	}
 	else {
