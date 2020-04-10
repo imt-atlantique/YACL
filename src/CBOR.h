@@ -823,12 +823,18 @@ class CBOR
 		CBOR operator[](char key)	{ return access_op_numeric((unsigned char)key); };
 		CBOR operator[](short key)	{ return access_op_numeric((unsigned short)key); };
 		CBOR operator[](int key)	{ return access_op_numeric((unsigned int)key); };
-		CBOR operator[](long key)	{ return access_op_numeric((unsigned long)key); };
+#if defined(ESP32) || defined(ESP8266)
 		CBOR operator[](long long key)	{ return access_op_numeric((unsigned long long)key); };
+#else
+		CBOR operator[](long key)	{ return access_op_numeric((unsigned long)key); };
+#endif
 		CBOR operator[](unsigned char key)	{ return access_op_numeric(key); };
 		CBOR operator[](unsigned short key)	{ return access_op_numeric(key); };
 		CBOR operator[](unsigned int key)	{ return access_op_numeric(key); };
-		CBOR operator[](unsigned long key)	{ return access_op_numeric(key); };
+#if defined(ESP32) || defined(ESP8266)
 		CBOR operator[](unsigned long long key)	{ return access_op_numeric(key); };
+#else
+		CBOR operator[](unsigned long key)	{ return access_op_numeric(key); };
+#endif
 };
 #endif
