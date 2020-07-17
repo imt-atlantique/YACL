@@ -33,12 +33,24 @@ Hence, before attempting such casting, the type of the CBOR should be determined
 Please find bellow the list of `is_*()` available methods:
 ```c++
 //Unsigned integers
+bool is_uchar();
+bool is_ushort();
+bool is_uint();
+bool is_ulong();
+bool is_ulong_long();
+
 bool is_uint8();
 bool is_uint16();
 bool is_uint32();
 bool is_uint64();
 
 //Signed integers
+bool is_char();
+bool is_short();
+bool is_int();
+bool is_long();
+bool is_long_long();
+
 bool is_int8();
 bool is_int16();
 bool is_int32();
@@ -58,7 +70,7 @@ bool is_pair();
 bool is_tag();
 ```
 
-Note that for (unsigned) integers and floats, `is_type*()` indicated that the CBOR objects fits into a type of size `*` bits. For instance:
+Note that for (unsigned) integers and floats, `is_type*()` indicates that the CBOR-encoded number can be represented using a type of size `*` bits. Similarly for standard types, `is_*()` indicates that the CBOR-encoded number can be represented with type `*`.  For instance:
 ```c++
 CBOR val = CBOR(123);
 
