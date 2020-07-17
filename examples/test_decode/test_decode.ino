@@ -29,7 +29,8 @@ bool test_negint1()
 	uint8_t cbor_data[] = {0x20};
 	CBOR cbor = CBOR(cbor_data, 1);
 
-	if (cbor.is_int8() && ((int8_t)cbor == -1)) {
+	//if (cbor.is_char() && ((char)cbor == -1)) {
+	if (cbor.is_char() && ((char)cbor == -1)) {
 		return true;
 	}
 
@@ -41,7 +42,7 @@ bool test_negint2()
 	uint8_t cbor_data[] = {0x39, 0x03, 0xE7};
 	CBOR cbor = CBOR(cbor_data, 3);
 
-	if (cbor.is_int16() && ((int16_t)cbor == -1000)) {
+	if (cbor.is_short() && ((short)cbor == -1000)) {
 		return true;
 	}
 
@@ -53,7 +54,7 @@ bool test_negint3()
 	uint8_t cbor_data[] = {0x3A, 0x3B, 0x9A, 0xC9, 0xFF};
 	CBOR cbor = CBOR(cbor_data, 5);
 
-	if (cbor.is_int32() && ((int32_t)cbor == -1000000000)) {
+	if (cbor.is_long() && ((long)cbor == -1000000000)) {
 		return true;
 	}
 
@@ -65,7 +66,7 @@ bool test_negint4()
 	uint8_t cbor_data[] = {0x3B, 0x00, 0x03, 0x8D, 0x7E, 0xA4, 0xC6, 0x7F, 0xFF};
 	CBOR cbor = CBOR(cbor_data, 9);
 
-	if (cbor.is_int64() && ((int64_t)cbor == -1000000000000000)) {
+	if (cbor.is_long_long() && ((long long)cbor == -1000000000000000)) {
 		return true;
 	}
 
@@ -77,7 +78,7 @@ bool test_int0()
 	uint8_t cbor_data[] = {0x17};
 	CBOR cbor = CBOR(cbor_data, 1);
 
-	if (cbor.is_uint8() && ((uint8_t)cbor == 23)) {
+	if (cbor.is_uchar() && ((unsigned char)cbor == 23)) {
 		return true;
 	}
 
@@ -89,7 +90,7 @@ bool test_int1()
 	uint8_t cbor_data[] = {0x19, 0x03, 0xe8};
 	CBOR cbor = CBOR(cbor_data, 3);
 
-	if (cbor.is_uint16() && ((uint16_t)cbor == 1000)) {
+	if (cbor.is_ushort() && ((unsigned short)cbor == 1000)) {
 		return true;
 	}
 
@@ -101,7 +102,7 @@ bool test_int2()
 	uint8_t cbor_data[] = {0x1a, 0x3b, 0x9a, 0xca, 0x00};
 	CBOR cbor = CBOR(cbor_data, 5);
 
-	if (cbor.is_uint32() && ((uint32_t)cbor == 1000000000)) {
+	if (cbor.is_ulong() && ((unsigned long)cbor == 1000000000)) {
 		return true;
 	}
 
@@ -113,7 +114,7 @@ bool test_int3()
 	uint8_t cbor_data[] = {0x1a, 0x8d, 0x9f, 0x57, 0x30};
 	CBOR cbor = CBOR(cbor_data, 5);
 
-	if (cbor.is_uint32() && ((uint32_t)cbor == 2376030000)) {
+	if (cbor.is_ulong() && ((unsigned long)cbor == 2376030000)) {
 		return true;
 	}
 
@@ -125,7 +126,7 @@ bool test_int4()
 	uint8_t cbor_data[] = {0x1b, 0x00, 0x03, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00};
 	CBOR cbor = CBOR(cbor_data, 9);
 
-	if (cbor.is_uint64() && ((uint64_t)cbor == 1000000000000000)) {
+	if (cbor.is_ulong_long() && ((unsigned long long)cbor == 1000000000000000)) {
 		return true;
 	}
 

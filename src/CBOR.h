@@ -1,6 +1,5 @@
 #ifndef INCLUDED_CBOR_H
 #define INCLUDED_CBOR_H
-
 #include <math.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -120,6 +119,8 @@ class CBOR
 			else if (sizeof(T) == 4) {
 				return encode_type_num(cbor_type, (uint64_t)value);
 			}
+
+			return false;
 		}
 
 		//! Determine if this CBOR object is a negative integer.
@@ -203,23 +204,25 @@ class CBOR
 		 * \param value The positive integer to encode.
 		 * \return False if anything goes wrong. True otherwise.
 		 */
-		bool add(uint8_t value) { return encode_type_num(CBOR_UINT, value); }
-		bool add(uint16_t value) { return encode_type_num(CBOR_UINT, value); }
-		bool add(uint32_t value) { return encode_type_num(CBOR_UINT, value); }
-		bool add(uint64_t value) { return encode_type_num(CBOR_UINT, value); }
+		bool add(unsigned char value) { return encode_type_num(CBOR_UINT, value); }
+		bool add(unsigned short value) { return encode_type_num(CBOR_UINT, value); }
+		bool add(unsigned int value) { return encode_type_num(CBOR_UINT, value); }
+		bool add(unsigned long value) { return encode_type_num(CBOR_UINT, value); }
+		bool add(unsigned long long value) { return encode_type_num(CBOR_UINT, value); }
 
 		//! Add a CBOR INT at the end of the buffer.
 		/*!
 		 * Add the smallest-length CBOR INT (or UINT, depending on the sign)
 		 * representation of the value at the end of the buffer.
 		 *
-		 * \param value The 8-bit integer to encode.
+		 * \param value The signed integer to encode.
 		 * \return False if anything goes wrong. True otherwise.
 		 */
-		bool add(int8_t value);
-		bool add(int16_t value);
-		bool add(int32_t value);
-		bool add(int64_t value);
+		bool add(char value);
+		bool add(short value);
+		bool add(int value);
+		bool add(long value);
+		bool add(long long value);
 
 		//! Add a CBOR FLOAT32 at the end of the buffer.
 		/*!
@@ -268,6 +271,107 @@ class CBOR
 			status |= add(tag_item);
 
 			return status;
+		}
+
+		//! Cast a CBOR (U)INT to native type T.
+		/*!
+		 * Output of this operator when this CBOR object is not convertible to
+		 * T is undefined.
+		 */
+		template <typename T> T as_num() const
+		{
+			if (is_uint8()) {
+				return (T)decode_abs_num8(get_const_buffer_begin());
+			}
+			if (is_uint16()) {
+				return (T)decode_abs_num16(get_const_buffer_begin());
+			}
+			if (is_uint32()) {
+				return (T)decode_abs_num32(get_const_buffer_begin());
+			}
+			if (is_uint64()) {
+				return (T)decode_abs_num64(get_const_buffer_begin());
+			}
+			if (is_int8()) {
+				if (is_neg_num()) {
+					return (T)(-1-decode_abs_num8(get_const_buffer_begin()));
+				}
+				else {
+					return (T)decode_abs_num8(get_const_buffer_begin());
+				}
+			}
+			if (is_int16()) {
+				if (is_neg_num()) {
+					return (T)(-1-decode_abs_num16(get_const_buffer_begin()));
+				}
+				else {
+					return (T)decode_abs_num16(get_const_buffer_begin());
+				}
+			}
+			if (is_int32()) {
+				if (is_neg_num()) {
+					return (T)(-1-decode_abs_num32(get_const_buffer_begin()));
+				}
+				else {
+					return (T)decode_abs_num32(get_const_buffer_begin());
+				}
+			}
+			if (is_int64()) {
+				if (is_neg_num()) {
+					return (T)(-1-decode_abs_num64(get_const_buffer_begin()));
+				}
+				else {
+					return (T)decode_abs_num64(get_const_buffer_begin());
+				}
+			}
+
+			return 0;
+		}
+
+		//! Return true if the CBOR object is an unsigned integer that fits
+		//into type T.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		template <typename T> static bool is_snum(const uint8_t* buffer)
+		{
+			if (sizeof(T) == 1) {
+				return is_int8(buffer);
+			}
+			else if (sizeof(T) == 2) {
+				return is_int16(buffer);
+			}
+			else if (sizeof(T) == 4) {
+				return is_int32(buffer);
+			}
+			else if (sizeof(T) >= 8) {
+				return is_int64(buffer);
+			}
+
+			return false;
+		}
+
+		//! Return true if the CBOR object is an unsigned integer that fits
+		//into type T.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		template <typename T> static bool is_unum(const uint8_t* buffer)
+		{
+			if (sizeof(T) == 1) {
+				return is_uint8(buffer);
+			}
+			else if (sizeof(T) == 2) {
+				return is_uint16(buffer);
+			}
+			else if (sizeof(T) == 4) {
+				return is_uint32(buffer);
+			}
+			else if (sizeof(T) >= 8) {
+				return is_uint64(buffer);
+			}
+
+			return false;
 		}
 
 		/*!
@@ -442,6 +546,31 @@ class CBOR
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_uint64(const uint8_t* buffer);
+		//! Return true if the CBOR object is an unsigned integer that fits into an unsigned char.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_uchar(const uint8_t* buffer) { return is_unum<unsigned char>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into an unsigned short.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_ushort(const uint8_t* buffer) { return is_unum<unsigned short>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into an unsigned int.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_uint(const uint8_t* buffer) { return is_unum<unsigned int>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into an unsigned long.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_ulong(const uint8_t* buffer) { return is_unum<unsigned long>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into an unsigned long long.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_ulong_long(const uint8_t* buffer) { return is_unum<unsigned long long>(buffer); }
 		//! Return true if the CBOR object is an integer that fits into an int8_t.
 		/*
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
@@ -462,6 +591,31 @@ class CBOR
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_int64(const uint8_t* buffer);
+		//! Return true if the CBOR object is an unsigned integer that fits into a char.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_char(const uint8_t* buffer) { return is_snum<char>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into a short.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_short(const uint8_t* buffer) { return is_snum<short>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into an int.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_int(const uint8_t* buffer) { return is_snum<int>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into a long.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_long(const uint8_t* buffer) { return is_snum<long>(buffer); }
+		//! Return true if the CBOR object is an unsigned integer that fits into a long long.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_long_long(const uint8_t* buffer) { return is_snum<long long>(buffer); }
 		//! Return true if the CBOR object is a CBOR FLOAT16.
 		/*
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
@@ -515,6 +669,16 @@ class CBOR
 		bool is_uint32() const {return is_uint32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an uint64_t.
 		bool is_uint64() const {return is_uint64(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an unsigned char.
+		bool is_uchar() const {return is_uchar(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an unsigned short.
+		bool is_ushort() const {return is_ushort(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an unsigned int.
+		bool is_uint() const {return is_uint(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an unsigned long.
+		bool is_ulong() const {return is_ulong(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an unsigned long long.
+		bool is_ulong_long() const {return is_ulong_long(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int8_t.
 		bool is_int8() const {return is_int8(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int16_t.
@@ -523,6 +687,16 @@ class CBOR
 		bool is_int32() const {return is_int32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int64_t.
 		bool is_int64() const {return is_int64(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into a char.
+		bool is_char() const {return is_char(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into a short.
+		bool is_short() const {return is_short(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into an int.
+		bool is_int() const {return is_int(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into a long.
+		bool is_long() const {return is_long(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an unsigned integer that fits into a long long.
+		bool is_long_long() const {return is_long_long(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is a CBOR FLOAT16.
 		bool is_float16() const {return is_float16(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into 32-bit float.
@@ -545,54 +719,66 @@ class CBOR
 		 * Output of this operator when this CBOR object is not a CBOR BOOl is undefined.
 		 */
 		operator bool() const;
-		//! Convert this CBOR object to an uint8_t.
-		/*!
-		 * Output of this operator when this CBOR object is not an unsigned
-		 * integer that fits on 8 bits is undefined.
-		 */
-		operator uint8_t() const;
-		//! Convert this CBOR object to an uint16_t.
-		/*!
-		 * Output of this operator when	this CBOR object is not an unsigned
-		 * integer that fits on 16 bits is undefined.
-		 */
-		operator uint16_t() const;
-		//! Convert this CBOR object to an uint32_t.
-		/*!
-		 * Output of this operator when this CBOR object is not an unsigned
-		 * integer that fits on 32 bits is undefined.
-		 */
-		operator uint32_t() const;
-		//! Convert this CBOR object to an uint64_t.
-		/*!
-		 * Output of this operator when this CBOR object is not an unsigned
-		 * integer that fits on 64 bits is undefined.
-		 */
-		operator uint64_t() const;
-		//! Convert this CBOR object to an int8_t.
+		//! Convert this CBOR object to a char.
 		/*!
 		 * Output of this operator when this CBOR object is not an integer that
-		 * fits on 8 bits is undefined.
+		 * fits into a char	is undefined.
 		 */
-		operator int8_t() const;
-		//! Convert this CBOR object to an int16_t.
+		operator char() const { return as_num<char>(); }
+		//! Convert this CBOR object to a short.
 		/*!
 		 * Output of this operator when this CBOR object is not an integer that
-		 * fits on 16 bits is undefined.
+		 * fits into a short is undefined.
 		 */
-		operator int16_t() const;
-		//! Convert this CBOR object to an int32_t.
+		operator short() const { return as_num<short>(); };
+		//! Convert this CBOR object to a int.
 		/*!
 		 * Output of this operator when this CBOR object is not an integer that
-		 * fits on 32 bits is undefined.
+		 * fits into an int is undefined.
 		 */
-		operator int32_t() const;
-		//! Convert this CBOR object to an int64_t.
+		operator int() const { return as_num<int>(); };
+		//! Convert this CBOR object to a long.
 		/*!
 		 * Output of this operator when this CBOR object is not an integer that
-		 * fits on 64 bits is undefined.
+		 * fits into a long is undefined.
 		 */
-		operator int64_t() const;
+		operator long() const { return as_num<long>(); };
+		//! Convert this CBOR object to a long long.
+		/*!
+		 * Output of this operator when this CBOR object is not an integer that
+		 * fits into a long long is undefined.
+		 */
+		operator long long() const { return as_num<long long>(); };
+		//! Convert this CBOR object to a unsigned char.
+		/*!
+		 * Output of this operator when this CBOR object is not a positive
+		 * integer that	fits into an unsigned char is undefined.
+		 */
+		operator unsigned char() const { return as_num<unsigned char>(); };
+		//! Convert this CBOR object to a unsigned short.
+		/*!
+		 * Output of this operator when this CBOR object is not a positive
+		 * integer that	fits into an unsigned short is undefined.
+		 */
+		operator unsigned short() const { return as_num<unsigned short>(); };
+		//! Convert this CBOR object to a unsigned int.
+		/*!
+		 * Output of this operator when this CBOR object is not a positive
+		 * integer that	fits into an unsigned int is undefined.
+		 */
+		operator unsigned int() const { return as_num<unsigned int>(); };
+		//! Convert this CBOR object to a unsigned long.
+		/*!
+		 * Output of this operator when this CBOR object is not a positive
+		 * integer that	fits into an unsigned long is undefined.
+		 */
+		operator unsigned long() const { return as_num<unsigned long>(); }
+		//! Convert this CBOR object to a unsigned long long.
+		/*!
+		 * Output of this operator when this CBOR object is not a positive
+		 * integer that	fits into an unsigned long long is undefined.
+		 */
+		operator unsigned long long() const { return as_num<unsigned long long>(); }
 		//! Convert this CBOR object to a float.
 		/*!
 		 * Output of this operator when this CBOR object is not a floating point
@@ -605,6 +791,7 @@ class CBOR
 		 * number that fits in a double is undefined.
 		 */
 		operator double() const;
+
 		//! When this CBOR object is a CBOR STRING, returns this string length.
 		/*!
 		 * Output of this function when this CBOR object is not a string is undefined.
@@ -615,6 +802,7 @@ class CBOR
 		{
 			return decode_abs_num(get_const_buffer_begin());
 		}
+
 		//! When this CBOR object is a CBOR STRING, copies it to this one passed as a parameter.
 		/*!
 		 * Behavior of this function when this CBOR object is not a string is undefined.
@@ -622,6 +810,7 @@ class CBOR
 		 * \param str Buffer into which this CBOR string is copied.
 		 */
 		void get_string(char* str) const;
+
 		//! When this CBOR object is a CBOR STRING, copies it to this one passed as a parameter.
 		/*!
 		 * Behavior of this function when this CBOR object is not a string is undefined.
@@ -631,6 +820,7 @@ class CBOR
 		 * \param str Buffer into which this CBOR string is copied.
 		 */
 		void get_string(String& str) const;
+
 		//! When this CBOR object is a CBOR STRING, return this string as an Arduino String object.
 		/*!
 		 * Behavior of this function when this CBOR object is not a string is undefined.
@@ -638,6 +828,7 @@ class CBOR
 		 * \returns this CBOR string as an Arduino String object.
 		 */
 		String to_string() const;
+
 		//! When this CBOR object is a CBOR BYTE STRING, returns this byte string length.
 		/*!
 		 * Output of this function when this CBOR object is not a byte string is undefined.
@@ -648,6 +839,7 @@ class CBOR
 		{
 			return decode_abs_num(get_const_buffer_begin());
 		}
+
 		//! When this CBOR object is a CBOR BYTE STRING, copies it to this one passed as a parameter.
 		/*!
 		 * Behavior of this function when this CBOR object is not a byte string is undefined.
@@ -657,6 +849,7 @@ class CBOR
 		 * \param str Buffer into which this CBOR byte string is copied.
 		 */
 		void get_bytestring(uint8_t* bytestr) const;
+
 		//! When this CBOR object is a CBOR TAG, return the tag value.
 		/*!
 		 * Output of this operator when this CBOR object is not a CBOR TAG
@@ -665,6 +858,7 @@ class CBOR
 		 *  \return The tag value of this CBOR TAG.
 		 */
 		size_t get_tag_value() const;
+
 		//! When this CBOR object is a CBOR TAG, return the tag item.
 		/*!
 		 * Output of this operator when this CBOR object is not a CBOR TAG

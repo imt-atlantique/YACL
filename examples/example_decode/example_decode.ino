@@ -69,7 +69,7 @@ void setup()
 	Serial.print("\t \"temperatures\": [");
 	for (size_t i=0 ; i < array.n_elements() ; ++i) {
 		//Check that the value fit in an int (32 bits integer)
-		if(!array[i].is_int32()) {
+		if(!array[i].is_int()) {
 			Serial.print("Does not fit in an int, ");
 		}
 		else {

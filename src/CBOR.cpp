@@ -521,43 +521,53 @@ bool CBOR::add(bool value)
 	return true;
 }
 
-bool CBOR::add(int8_t value)
+bool CBOR::add(char value)
 {
 	if (value < 0) {
-		return encode_type_num(CBOR_NEGINT, (uint8_t)(-1-value));
+		return encode_type_num(CBOR_NEGINT, (unsigned char)(-1-value));
 	}
 	else {
-		return encode_type_num(CBOR_UINT, (uint8_t)value);
+		return encode_type_num(CBOR_UINT, (unsigned char)value);
 	}
 }
 
-bool CBOR::add(int16_t value)
+bool CBOR::add(short value)
 {
 	if (value < 0) {
-		return encode_type_num(CBOR_NEGINT, (uint16_t)(-1-value));
+		return encode_type_num(CBOR_NEGINT, (unsigned short)(-1-value));
 	}
 	else {
-		return encode_type_num(CBOR_UINT, (uint16_t)value);
+		return encode_type_num(CBOR_UINT, (unsigned short)value);
 	}
 }
 
-bool CBOR::add(int32_t value)
+bool CBOR::add(int value)
 {
 	if (value < 0) {
-		return encode_type_num(CBOR_NEGINT, (uint32_t)(-1-value));
+		return encode_type_num(CBOR_NEGINT, (unsigned int)(-1-value));
 	}
 	else {
-		return encode_type_num(CBOR_UINT, (uint32_t)value);
+		return encode_type_num(CBOR_UINT, (unsigned int)value);
 	}
 }
 
-bool CBOR::add(int64_t value)
+bool CBOR::add(long value)
 {
 	if (value < 0) {
-		return encode_type_num(CBOR_NEGINT, (uint64_t)(-1-value));
+		return encode_type_num(CBOR_NEGINT, (unsigned long)(-1-value));
 	}
 	else {
-		return encode_type_num(CBOR_UINT, (uint64_t)value);
+		return encode_type_num(CBOR_UINT, (unsigned long)value);
+	}
+}
+
+bool CBOR::add(long long value)
+{
+	if (value < 0) {
+		return encode_type_num(CBOR_NEGINT, (unsigned long long)(-1-value));
+	}
+	else {
+		return encode_type_num(CBOR_UINT, (unsigned long long)value);
 	}
 }
 
@@ -834,142 +844,6 @@ bool CBOR::is_tag(const uint8_t* buffer)
 CBOR::operator bool() const
 {
 	return (get_const_buffer_begin()[0] == CBOR_TRUE)?true:false;
-}
-
-CBOR::operator uint8_t() const
-{
-
-	return (is_uint8())?decode_abs_num8(get_const_buffer_begin()):0;
-}
-
-CBOR::operator uint16_t() const
-{
-	if (is_uint8()) {
-		return (uint16_t)decode_abs_num8(get_const_buffer_begin());
-	}
-	if(is_uint16()) {
-		return decode_abs_num16(get_const_buffer_begin());
-	}
-
-	return 0;
-}
-
-CBOR::operator uint32_t() const
-{
-	if (is_uint8()) {
-		return (uint32_t)decode_abs_num8(get_const_buffer_begin());
-	}
-	if(is_uint16()) {
-		return (uint32_t)decode_abs_num16(get_const_buffer_begin());
-	}
-	if(is_uint32()) {
-		return decode_abs_num32(get_const_buffer_begin());
-	}
-
-	return 0;
-}
-
-CBOR::operator uint64_t() const
-{
-	if (is_uint8()) {
-		return (uint64_t)decode_abs_num8(get_const_buffer_begin());
-	}
-	if(is_uint16()) {
-		return (uint64_t)decode_abs_num16(get_const_buffer_begin());
-	}
-	if(is_uint32()) {
-		return (uint64_t)decode_abs_num32(get_const_buffer_begin());
-	}
-	if(is_uint64()) {
-		return decode_abs_num64(get_const_buffer_begin());
-	}
-
-	return 0;
-}
-
-CBOR::operator int8_t() const
-{
-	uint8_t val_abs = decode_abs_num8(get_const_buffer_begin());
-
-	if (is_int8()) {
-		if (is_neg_num()) {
-			return (int8_t)(-1-val_abs);
-		}
-		else {
-			return val_abs;
-		}
-	}
-
-	return 0;
-}
-
-CBOR::operator int16_t() const
-{
-	if (is_int8()) {
-		return (int16_t)((int8_t)(*this));
-	}
-
-	uint16_t val_abs = decode_abs_num16(get_const_buffer_begin());
-
-	if (is_int16()) {
-		if (is_neg_num()) {
-			return (int16_t)(-1-val_abs);
-		}
-		else {
-			return val_abs;
-		}
-	}
-
-	return 0;
-}
-
-CBOR::operator int32_t() const
-{
-	if (is_int8()) {
-		return (int32_t)((int8_t)(*this));
-	}
-	if (is_int16()) {
-		return (int32_t)((int16_t)(*this));
-	}
-
-	uint32_t val_abs = decode_abs_num32(get_const_buffer_begin());
-
-	if (is_int32()) {
-		if (is_neg_num()) {
-			return (int32_t)(-1-val_abs);
-		}
-		else {
-			return val_abs;
-		}
-	}
-
-	return 0;
-}
-
-CBOR::operator int64_t() const
-{
-	if (is_int8()) {
-		return (int64_t)((int8_t)(*this));
-	}
-	if (is_int16()) {
-		return (int64_t)((int16_t)(*this));
-	}
-	if (is_int32()) {
-		return (int64_t)((int32_t)(*this));
-	}
-
-	uint64_t val_abs = decode_abs_num64(get_const_buffer_begin());
-
-	if (is_int64()) {
-		if (is_neg_num()) {
-			return (int64_t)(-1-val_abs);
-		}
-		else {
-			return val_abs;
-		}
-	}
-
-	return 0;
 }
 
 CBOR::operator float() const
