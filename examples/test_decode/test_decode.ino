@@ -29,8 +29,7 @@ bool test_negint1()
 	uint8_t cbor_data[] = {0x20};
 	CBOR cbor = CBOR(cbor_data, 1);
 
-	//if (cbor.is_char() && ((char)cbor == -1)) {
-	if (cbor.is_char() && ((char)cbor == -1)) {
+	if (cbor.is_schar() && ((signed char)cbor == -1)) {
 		return true;
 	}
 

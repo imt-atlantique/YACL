@@ -219,6 +219,7 @@ class CBOR
 		 * \return False if anything goes wrong. True otherwise.
 		 */
 		bool add(char value);
+		bool add(signed char value);
 		bool add(short value);
 		bool add(int value);
 		bool add(long value);
@@ -591,11 +592,16 @@ class CBOR
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_int64(const uint8_t* buffer);
-		//! Return true if the CBOR object is an unsigned integer that fits into a char.
+		//! Return true if the CBOR object is an signed integer that fits into a char.
 		/*
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
 		 */
 		static bool is_char(const uint8_t* buffer) { return is_snum<char>(buffer); }
+		//! Return true if the CBOR object is an signed integer that fits into a signed char.
+		/*
+		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
+		 */
+		static bool is_schar(const uint8_t* buffer) { return is_snum<signed char>(buffer); }
 		//! Return true if the CBOR object is an unsigned integer that fits into a short.
 		/*
 		 * \param buffer Pointer to the begining of the buffer containing the CBOR object.
@@ -687,8 +693,10 @@ class CBOR
 		bool is_int32() const {return is_int32(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an integer that fits into an int64_t.
 		bool is_int64() const {return is_int64(get_const_buffer_begin()); };
-		//! Return true if this CBOR object is an unsigned integer that fits into a char.
+		//! Return true if this CBOR object is an signed integer that fits into a char.
 		bool is_char() const {return is_char(get_const_buffer_begin()); };
+		//! Return true if this CBOR object is an signed integer that fits into a signed char.
+		bool is_schar() const {return is_schar(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into a short.
 		bool is_short() const {return is_short(get_const_buffer_begin()); };
 		//! Return true if this CBOR object is an unsigned integer that fits into an int.
@@ -725,6 +733,12 @@ class CBOR
 		 * fits into a char	is undefined.
 		 */
 		operator char() const { return as_num<char>(); }
+		//! Convert this CBOR object to a char.
+		/*!
+		 * Output of this operator when this CBOR object is not an integer that
+		 * fits into a char	is undefined.
+		 */
+		operator signed char() const { return as_num<signed char>(); }
 		//! Convert this CBOR object to a short.
 		/*!
 		 * Output of this operator when this CBOR object is not an integer that

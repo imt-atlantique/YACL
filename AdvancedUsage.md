@@ -45,7 +45,7 @@ bool is_uint32();
 bool is_uint64();
 
 //Signed integers
-bool is_char();
+bool is_schar();
 bool is_short();
 bool is_int();
 bool is_long();
@@ -55,6 +55,11 @@ bool is_int8();
 bool is_int16();
 bool is_int32();
 bool is_int64();
+
+//Caution: char can be either signed or unsigned.
+//is_char() assumes that the char type can represent a negative number,
+//which may or may not be the case on your machine.
+bool is_char();
 
 //Floating point values
 bool is_float16();

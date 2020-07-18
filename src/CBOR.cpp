@@ -531,6 +531,16 @@ bool CBOR::add(char value)
 	}
 }
 
+bool CBOR::add(signed char value)
+{
+	if (value < 0) {
+		return encode_type_num(CBOR_NEGINT, (unsigned char)(-1-value));
+	}
+	else {
+		return encode_type_num(CBOR_UINT, (unsigned char)value);
+	}
+}
+
 bool CBOR::add(short value)
 {
 	if (value < 0) {
